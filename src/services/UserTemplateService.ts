@@ -102,8 +102,8 @@ export default class UserTemplateService {
   }
 
   // create shareable link
-  public async shareTemplate(ownerAuth0Id: string, templateId: string, userId: string, language: string = "en"): Promise<string> {
-    const user = await UserRepository.findUserByAuth0Id(ownerAuth0Id);
+  public async shareTemplate(ownerUid: string, templateId: string, userId: string, language: string = "en"): Promise<string> {
+    const user = await UserRepository.findUserByUid(ownerUid);
 
     if (!user) throw new NotFoundError("User not found");
 

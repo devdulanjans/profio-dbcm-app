@@ -52,10 +52,10 @@ export const deleteTemplateFromUser = async (req: Request, res: Response) => {
 
 export const shareTemplate = async (req: Request, res: Response) => {
     try {
-      const ownerAuth0Id = (req as any).auth.sub;
+      const ownerUid = (req as any).user.uid;
 
-      if (!ownerAuth0Id) {
-        return res.status(400).json({ status: "error", message: "Owner Auth0 ID is required." });
+      if (!ownerUid) {
+        return res.status(400).json({ status: "error", message: "Owner UID is required." });
       }
 
       const { templateId, userId, language } = req.body;
@@ -64,7 +64,7 @@ export const shareTemplate = async (req: Request, res: Response) => {
         return res.status(400).json({ status: "error", message: "Template ID and User ID are required." });
       }
 
-      const link = await templateService.shareTemplate(ownerAuth0Id, templateId, userId, language);
+      const link = await templateService.shareTemplate(ownerUid, templateId, userId, language);
 
       res.json({ status: 0 , message:"Template shared successfully", link });
 

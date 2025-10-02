@@ -6,7 +6,7 @@ export interface ILocalizedField {
 
 export interface UserDto {
   email: string;
-  auth0Id: string;
+  uid: string;
   name?: ILocalizedField;
   phoneNumber?: string;
   personalAddress?: ILocalizedField;

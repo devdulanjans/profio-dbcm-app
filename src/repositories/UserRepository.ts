@@ -13,8 +13,12 @@ export default class UserRepository {
     return User.findById(id);
   }
 
-  public static async findUserByAuth0Id(auth0Id: string) {
-    return User.findOne({ auth0Id });
+  public static async findUserByUid(uid: string) {
+    return User.findOne({ uid });
+  }
+
+  public async findUserByEmailOrUid(email: string, uid: string) {
+    return User.findOne({ $or: [{ email }, { uid }] });
   }
 
   public async findByShareUrlName(shareUrlName: string) {

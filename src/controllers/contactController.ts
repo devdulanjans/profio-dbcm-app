@@ -8,10 +8,10 @@ export class ContactController {
   
   async saveContact(req: Request, res: Response, next: Function) {
     try {
-      const auth0Id = (req as any).auth.sub; // Auth0 user ID
+      const uid = (req as any).user.uid; 
 
-      if (!auth0Id) {
-        return res.status(401).json({ status: "Error", message: "Unauthorized: user.sub not found" });
+      if (!uid) {
+        return res.status(401).json({ status: "Error", message: "Unauthorized: user.uid not found" });
       }
 
       const { profileId, userId, templateId } = req.body;
@@ -20,7 +20,7 @@ export class ContactController {
         return res.status(400).json({ status: "Error", message: "Bad Request: Missing required fields" });
       }
 
-      const contact = await service.saveContact(userId, profileId, auth0Id, templateId);
+      const contact = await service.saveContact(userId, profileId, uid, templateId);
 
       res.json({ status: 0, message: "Contact saved successfully", data: contact });
 
@@ -42,10 +42,10 @@ export class ContactController {
 
   async getContacts(req: Request, res: Response, next: Function) {
     try {
-      const auth0Id = (req as any).auth.sub; // Auth0 user ID
+      const uid = (req as any).user.uid; // Auth0 user ID
 
-      if (!auth0Id) {
-        return res.status(401).json({ status: "Error", message: "Unauthorized: user.sub not found" });
+      if (!uid) {
+        return res.status(401).json({ status: "Error", message: "Unauthorized: user.uid not found" });
       }
 
       const userId = req.params.id;
@@ -54,7 +54,7 @@ export class ContactController {
         return res.status(400).json({ status: "Error", message: "Bad Request: Missing userId parameter" });
       }
 
-      const contacts = await service.getContacts(userId, auth0Id);
+      const contacts = await service.getContacts(userId, uid);
 
       res.json({ status: 0, message: "Contacts retrieved successfully", data: contacts });
 
@@ -66,10 +66,10 @@ export class ContactController {
 
   async removeContact(req: Request, res: Response, next: Function) {
     try {
-      const auth0Id = (req as any).auth.sub; // Auth0 user ID
+      const uid = (req as any).user.uid; // Auth0 user ID
 
-      if (!auth0Id) {
-        return res.status(401).json({ status: "Error", message: "Unauthorized: user.sub not found" });
+      if (!uid) {
+        return res.status(401).json({ status: "Error", message: "Unauthorized: user.uid not found" });
       }
 
       const contactId = req.params.id;
@@ -78,7 +78,7 @@ export class ContactController {
         return res.status(400).json({ status: "Error", message: "Bad Request: Missing contactId parameter" });
       }
 
-      await service.removeContact(contactId, auth0Id);
+      await service.removeContact(contactId, uid);
 
       res.json({ status: 0, message: "Contact removed successfully" });
 
@@ -91,12 +91,12 @@ export class ContactController {
   async checkSaved(req: Request, res: Response, next: Function) {
     try {
       console.log("checkSaved called");
-      const auth0Id = (req as any).auth?.sub; // Auth0 user ID
-      if (!auth0Id) {
-        return res.status(401).json({ status: "Error", message: "Unauthorized: user.sub not found" });
+      const uid = (req as any).user.uid; // Auth0 user ID
+      if (!uid) {
+        return res.status(401).json({ status: "Error", message: "Unauthorized: user.uid not found" });
       }
       const { profileId, userId } = req.body;
-      const isSaved = await service.checkSaved(userId, profileId, auth0Id);
+      const isSaved = await service.checkSaved(userId, profileId, uid);
       res.json({ status: 0, message: "Status retrieved successfully", isSaved: !!isSaved });
     } catch (err: any) {
       next(err);

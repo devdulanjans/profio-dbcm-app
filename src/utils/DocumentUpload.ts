@@ -1,5 +1,8 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import sharp from "sharp";
+import { AWSConfig } from "../config/AWSConfig";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export type MediaType = "IMAGE" | "VIDEO";
 export type MediaSize = "THUMBNAIL" | "MEDIUM" | "FULL";
@@ -21,16 +24,6 @@ interface AwsConfig {
     S3Bucket: string;
 }
 
-function getAwsConfig(): AwsConfig {
-    // Replace with your config loader
-    return {
-        AWSAccessKeyID: process.env.AWS_ACCESS_KEY_ID!,
-        AWSSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        AWSRegion: process.env.AWS_REGION!,
-        S3Bucket: process.env.S3_BUCKET!,
-    };
-}
-
 function setResponse( message: string, status: number, data?: MediaURLResponse): OperationResponse {
     return { message, status, data };
 }
@@ -47,6 +40,24 @@ function getS3Client(config: AwsConfig) {
     });
 }
 
+function getAwsConfig(): AwsConfig {
+    const awsAccessKeyId = process.env.S3_ACCESS_KEY_ID || "";
+    const awsSecretAccessKey = process.env.S3_SECRET_ACCESS_KEY || "";
+    const awsRegion = process.env.S3_REGION || "";
+    const s3Bucket = process.env.S3_BUCKET_NAME || "";
+
+    if (!awsAccessKeyId || !awsSecretAccessKey || !awsRegion || !s3Bucket) {
+        throw new Error("Missing AWS configuration values in environment variables");
+    }
+
+    return {
+        AWSAccessKeyID: awsAccessKeyId,
+        AWSSecretAccessKey: awsSecretAccessKey,
+        AWSRegion: awsRegion,
+        S3Bucket: s3Bucket,
+    };
+}
+
 export async function uploadMedia(userId: string, fileExtension: string, fileBuffer: Buffer): Promise<OperationResponse> {
     const awsConfig = getAwsConfig();
     const client = getS3Client(awsConfig);
@@ -58,7 +69,7 @@ export async function uploadMedia(userId: string, fileExtension: string, fileBuf
     const uploadedURLs: Record<string, string> = {};
     const uploadedKeys: Record<string, string> = {};
 
-    const key = `${userId}/${currentTime}${fileExtension}`;
+    const key = `${userId}/${currentTime}.${fileExtension}`;
     try {
         await client.send(
             new PutObjectCommand({
@@ -79,8 +90,49 @@ export async function uploadMedia(userId: string, fileExtension: string, fileBuf
     
     const urlRes: MediaURLResponse = {
         DocumentURL: s3URL,
-        DocumentKey: `${currentTime}${fileExtension}`,
+        DocumentKey: `${currentTime}.${fileExtension}`,
     };
 
     return setResponse("File uploaded successfully.", 0, urlRes);
 }
+
+export async function deleteMedia(userId: string, type: string, imageUrl: string): Promise<OperationResponse> {
+    const awsConfig = getAwsConfig();
+    const client = getS3Client(awsConfig);
+
+    const key = `${userId}/${type}/${imageUrl}`;
+
+    try {
+        await client.send(
+            new DeleteObjectCommand({
+                Bucket: awsConfig.S3Bucket,
+                Key: key,
+            })
+        );
+    } catch (err) {
+        return setResponse(
+            `Failed to delete document: ${err}`,
+            1
+        );
+    }
+    return setResponse("File deleted successfully.", 0);
+}
+export async function getPreSignedURL(userId: string, fileExtension: string, type: string): Promise<OperationResponse> {
+    const awsConfig = getAwsConfig();
+    const client = getS3Client(awsConfig);
+    const currentTime = new Date()
+        .toISOString()
+        .replace(/[-:.TZ]/g, "")
+        .slice(0, 14);
+
+    const fileName = `${currentTime}.${fileExtension}`;
+    const key = `${userId}/${type}/${fileName}`;
+    console.log("Generated key:", key);
+    const command = new PutObjectCommand({
+        Bucket: awsConfig.S3Bucket,
+        Key: key,
+    });
+    const url = await getSignedUrl(client, command, { expiresIn: 60 * 5 }); // 5 minutes
+    console.log("Generated pre-signed URL:", url);
+    return setResponse("Pre-signed URL generated successfully.", 0, { DocumentURL: url, DocumentKey: fileName });
+}   

@@ -6,12 +6,14 @@ import userTemplateRoutes from "./routes/userTemplateRoutes";
 import contactRoutes from "./routes/contactRoutes";
 import publicRoutes from "./routes/publicRoutes";
 import appGlobalConfigRoutes from "./routes/appGlobalConfigRoutes";
+import accessRoutes from "./routes/AccessRoutes";
 import { checkJwt } from "./middleware/authMiddleware";
-import UserRepository from "./repositories/UserRepository";
-import SubscriptionRepository from "./repositories/SubscriptionPlanRepository";
-import { userInfo } from "node:os";
-import User from "./models/User";
-import { UserDto } from "./dtos/UserDto";
+import { checkFirebaseJwt } from "./middleware/firebaseMiddleware";
+// import UserRepository from "./repositories/UserRepository";
+// import SubscriptionRepository from "./repositories/SubscriptionPlanRepository";
+// import { userInfo } from "node:os";
+// import User from "./models/User";
+// import { UserDto } from "./dtos/UserDto";
 
 const app = express();
 app.use(express.json());
@@ -22,88 +24,87 @@ app.get("/health", (req, res) => {
 });
 
 // Protected route (JWT required)
-app.get("/api/private", checkJwt, (req, res) => {
+app.get("/api/private", checkFirebaseJwt, (req, res) => {
   res.json({ message: "Access granted! Token is valid." });
 });
 
-app.get("/callback", async (req, res) => {
-    try {
-        const code = req.query.code as string;
+// app.get("/callback", async (req, res) => {
+//     try {
+//         const code = req.query.code as string;
 
-        if (!code) {
-            return res.status(400).json({ error: "Authorization code missing" });
-        }
+//         if (!code) {
+//             return res.status(400).json({ error: "Authorization code missing" });
+//         }
 
-        // Exchange code for token
-        const tokenResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                grant_type: "authorization_code",
-                client_id: process.env.AUTH0_CLIENT_ID,
-                client_secret: process.env.AUTH0_CLIENT_SECRET,
-                code: code,
-                redirect_uri: process.env.AUTH0_CALLBACK_URL,
-            }),
-        });
+//         // Exchange code for token
+//         const tokenResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
+//             method: "POST",
+//             headers: {
+//                 "Content-Type": "application/json",
+//             },
+//             body: JSON.stringify({
+//                 grant_type: "authorization_code",
+//                 client_id: process.env.AUTH0_CLIENT_ID,
+//                 client_secret: process.env.AUTH0_CLIENT_SECRET,
+//                 code: code,
+//                 redirect_uri: process.env.AUTH0_CALLBACK_URL,
+//             }),
+//         });
 
-        console.info("Token response status:", tokenResponse.status);
+//         console.info("Token response status:", tokenResponse.status);
 
-        if (!tokenResponse.ok) {
-            const errorData = await tokenResponse.json();
-            throw new Error(JSON.stringify(errorData));
-        }
+//         if (!tokenResponse.ok) {
+//             const errorData = await tokenResponse.json();
+//             throw new Error(JSON.stringify(errorData));
+//         }
 
-        const tokens = await tokenResponse.json();
+//         const tokens = await tokenResponse.json();
 
-        // Decode the ID token to extract the Auth0 user ID (sub)
-        const idToken = tokens.id_token;
-        const [, payloadBase64] = idToken.split(".");
-        const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf-8"));
-        const auth0Id = payload.sub;
-        const email = payload.email;
+//         // Decode the ID token to extract the Auth0 user ID (sub)
+//         const idToken = tokens.id_token;
+//         const [, payloadBase64] = idToken.split(".");
+//         const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf-8"));
+//         const auth0Id = payload.sub;
+//         const email = payload.email;
 
-        // Check DB for user with this auth0Id
-        // Replace with your actual DB logic
-        let user = await UserRepository.findUserByAuth0Id(auth0Id);
-        let createdUser;
+//         let user = await UserRepository.findUserByAuth0Id(auth0Id);
+//         let createdUser;
 
-        if (!user) {
-            // Create new user if not exists
-            console.log("Creating new user with Auth0 ID:", auth0Id);
+//         if (!user) {
+//             // Create new user if not exists
+//             console.log("Creating new user with Auth0 ID:", auth0Id);
 
-            const subscriptionCode = "FREE";
-            let subscription = await SubscriptionRepository.findBySubscriptionCode(subscriptionCode);
-            let subscriptionId = "";
+//             const subscriptionCode = "FREE";
+//             let subscription = await SubscriptionRepository.findBySubscriptionCode(subscriptionCode);
+//             let subscriptionId = "";
 
-            if (!subscription) {
-              console.error(`No subscription found with code: ${subscriptionCode}`);
-            } else {
-              subscriptionId = subscription._id;
-            }
+//             if (!subscription) {
+//               console.error(`No subscription found with code: ${subscriptionCode}`);
+//             } else {
+//               subscriptionId = subscription._id;
+//             }
 
-            const userToCreate: UserDto = { auth0Id: auth0Id, email: email, isDeleted: false, createdAt: new Date(), updatedAt: new Date(), subscriptionId: subscriptionId, languageSubscriptionList: ["en"] };
-            createdUser = await UserRepository.create(userToCreate);
-        }
+//             const userToCreate: UserDto = { uid: auth0Id, email: email, isDeleted: false, createdAt: new Date(), updatedAt: new Date(), subscriptionId: subscriptionId, languageSubscriptionList: ["en"] };
+//             createdUser = await UserRepository.create(userToCreate);
+//         }
 
-        res.json({ tokens, user: createdUser || user });
+//         res.json({ tokens, user: createdUser || user });
 
-    } catch (err: any) {
-        console.error("Error exchanging code for token:", err.response?.data || err.message);
-        res.status(500).json({ error: "Failed to get token", details: err.response?.data || err.message });
-    }
-});
+//     } catch (err: any) {
+//         console.error("Error exchanging code for token:", err.response?.data || err.message);
+//         res.status(500).json({ error: "Failed to get token", details: err.response?.data || err.message });
+//     }
+// });
 
 // Apply middleware for user routes
-app.use("/api/users", checkJwt, userRoutes);
-app.use("/api/subscriptions", checkJwt, subscriptionPlanRoutes);
-app.use("/api/templates", checkJwt, templateRoutes);
-app.use("/api/user-templates", checkJwt, userTemplateRoutes);
-app.use("/api/contacts", checkJwt, contactRoutes);
+app.use("/api/users", checkFirebaseJwt, userRoutes);
+app.use("/api/subscriptions", checkFirebaseJwt, subscriptionPlanRoutes);
+app.use("/api/templates", checkFirebaseJwt, templateRoutes);
+app.use("/api/user-templates", checkFirebaseJwt, userTemplateRoutes);
+app.use("/api/contacts", checkFirebaseJwt, contactRoutes);
 app.use("/api/public", publicRoutes);
-app.use("/api/app-global-config", checkJwt, appGlobalConfigRoutes);
+app.use("/api/app-global-config", checkFirebaseJwt, appGlobalConfigRoutes);
+app.use("/api/access", checkFirebaseJwt, accessRoutes);
 
 // Custom error handler for JWT
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

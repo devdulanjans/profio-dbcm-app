@@ -7,7 +7,7 @@ export interface ILocalizedField {
 export interface IUser extends Document {
   _id: ObjectId;
   email: string;
-  auth0Id: string;
+  uid: string;
   shareURLName?: string;
   phoneNumber?: string;
   personalWebsite?: string;
@@ -34,13 +34,13 @@ export interface IUser extends Document {
   jobTitle?: ILocalizedField;
   companyAddress?: ILocalizedField;
   otherLinks?: { title: ILocalizedField; url: string }[];
-  documents?: { title: ILocalizedField; url: string }[];
-  
+  documents?: { title: ILocalizedField; url: string , _id?: string}[];
+
 }
 
 const userSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true },
-  auth0Id: { type: String, required: true, unique: true },
+  uid: { type: String, required: true, unique: true },
   name: { type: Map, required: false, default: {} },
   shareURLName: { type: String, required: false, default: "" },
   phoneNumber: { type: String, required: false, default: "" },

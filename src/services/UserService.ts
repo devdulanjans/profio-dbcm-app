@@ -3,16 +3,18 @@ import UserRepository from "../repositories/UserRepository";
 import { IUser } from "../models/User"; // Adjust the path as needed
 import { UserCreateDto } from "../dtos/UserUpdateDto";
 import { UserDto } from "../dtos/UserDto";
-import { Response } from "express";
+import e, { Response } from "express";
 import { NotFoundError } from "../errors/NotFoundError";
 import { AuthorizationError } from "../errors/AuthorizationError";
 import AppGlobalConfig from "../models/AppGlobalConfig";
 import AppGlobalConfigRepository from "../repositories/AppGlobalConfigRepository";
 import { BadRequestError } from "../errors/BadRequestError";
 import SubscriptionPlanRepository from "../repositories/SubscriptionPlanRepository";
-import { uploadMedia } from "../utils/DocumentUpload";
+import { uploadMedia, deleteMedia, getPreSignedURL } from "../utils/DocumentUpload";
 // Add this import if ILocalizedField is defined elsewhere, e.g. in models/User
 import { ILocalizedField } from "../models/User";
+import { get } from "http";
+import { ObjectId } from "mongodb";
 
 export default class UserService {
   private userRepo: UserRepository;
@@ -33,8 +35,8 @@ export default class UserService {
     return this.userRepo.findById(id);
   }
 
-  public async getUserByAuth0Id(auth0Id: string) {
-    return UserRepository.findUserByAuth0Id(auth0Id);
+  public async getUserByUid(uid: string) {
+    return UserRepository.findUserByUid(uid);
   }
 
   public async getUserByShareUrlName(shareUrlName: string) {
@@ -84,7 +86,6 @@ export default class UserService {
   public async updateUser(id: string, data: Partial<UserCreateDto>) {
     const inputLang = data.language || "en";
 
-    // Fetch existing user to get subscribed languages
     const existingUser = await this.userRepo.findById(id);
     if (!existingUser) {
       throw new Error("User not found");
@@ -96,115 +97,51 @@ export default class UserService {
       throw new BadRequestError(`Language ${inputLang} not subscribed`);
     }
 
-    const newDocuments = data.newDocuments;
-    if (existingUser.subscriptionId) {
+    // build update object only with fields provided
+    const user: Record<string, any> = {};
+    user.updatedAt = new Date();
 
-      if (newDocuments && newDocuments.length > 0) {
-        const subscriptionPlan = await this.subscriptionPlanRepo.findById(existingUser.subscriptionId);
+    if (!existingUser.shareURLName || existingUser.shareURLName.trim() === "") {
+      let sharedURLName = data.name?.trim().replace(/\s+/g, "_").toLowerCase() || "" ;
 
-        if (subscriptionPlan && subscriptionPlan.document_upload_limit !== undefined) {
+      // check any existing user already have this shareURLName
+      const userWithSameShareURL = await this.userRepo.findByShareUrlName(sharedURLName);
 
-          const docLimit = subscriptionPlan.document_upload_limit;
-          const existingDocCount = data.existingDocuments ? data.existingDocuments.length : 0;
-
-          if (existingDocCount + newDocuments.length > docLimit) {
-            throw new BadRequestError(`Document upload limit exceeded. Limit: ${docLimit}, Current: ${existingDocCount}`);
-          }
-
-        }
+      if (userWithSameShareURL) {
+        const now = new Date();
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const ddmmyyyyhhmmss = pad(now.getDate()) + pad(now.getMonth() + 1) + now.getFullYear() + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+        sharedURLName = `${sharedURLName}_${ddmmyyyyhhmmss}`; // append timestamp in ddmmyyyyhhmmss format to make it unique
       }
-    } else {
-      if (newDocuments && newDocuments.length > 0) {
-        throw new BadRequestError("No subscription plan associated with user for document uploads");
-      }
+      user.shareURLName = sharedURLName;
     }
     
-    let profileImageUrl = existingUser.profileImageURL;
-    // Handle media upload if there's a new profile image
-    if (data.profileImage) {
 
-      const fileName = data.profileImage.filename || "";
-      const fileExtension = fileName.split('.').pop() || "";
+    if (data.name) user.name = await this.buildLocalized(data.name, inputLang, subscribedLangs);
+    if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
+    if (data.personalAddress) user.personalAddress = await this.buildLocalized(data.personalAddress, inputLang, subscribedLangs);
+    if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
+    if (data.companyName) user.companyName = await this.buildLocalized(data.companyName, inputLang, subscribedLangs);
+    if (data.jobTitle) user.jobTitle = await this.buildLocalized(data.jobTitle, inputLang, subscribedLangs);
+    if (data.companyEmail) user.companyEmail = data.companyEmail;
+    if (data.companyPhoneNumber) user.companyPhoneNumber = data.companyPhoneNumber;
+    if (data.companyAddress) user.companyAddress = await this.buildLocalized(data.companyAddress, inputLang, subscribedLangs);
+    if (data.companyWebsite) user.companyWebsite = data.companyWebsite;
+    if (data.whatsappNumber) user.whatsappNumber = data.whatsappNumber;
+    if (data.facebookUrl) user.facebookUrl = data.facebookUrl;
+    if (data.instagramUrl) user.instagramUrl = data.instagramUrl;
+    if (data.linkedInUrl) user.linkedInUrl = data.linkedInUrl;
+    if (data.tikTokUrl) user.tikTokUrl = data.tikTokUrl;
+    if (data.youtubeUrl) user.youtubeUrl = data.youtubeUrl;
 
-      if (fileExtension && fileName) {
-        const uploadResult = await uploadMedia(id, fileExtension, data.profileImage.buffer);
-        profileImageUrl = uploadResult.data?.DocumentURL; 
-      }
-
-    }
-
-    let uploadedDocuments: { title: ILocalizedField; url: string }[] = [];
-    for (const doc of data.newDocuments || []) {
-      if (doc.file) {
-        const fileName = doc.file.filename || "";
-        const fileExtension = fileName.split('.').pop() || "";
-
-        if (fileExtension && fileName) {
-          const uploadResult = await uploadMedia(id, fileExtension, doc.file.buffer);
-          if (uploadResult.status === 0 && uploadResult.data?.DocumentURL) {
-            // Convert title to ILocalizedField (assuming inputLang and subscribedLangs are available)
-            const localizedTitle = await this.buildLocalized(doc.title, inputLang, subscribedLangs) ?? {};
-            uploadedDocuments.push({ title: localizedTitle, url: uploadResult.data.DocumentURL });
-          }
-        }
-      }
-    }
-
-    let mergedDocuments: { title: ILocalizedField; url: string }[] = (data.existingDocuments
-      ? data.existingDocuments.map(doc => ({
-          title: typeof doc.title === "string" ? { en: doc.title } : doc.title,
-          url: doc.url,
+    if (data.otherLinks) {
+      user.otherLinks = await Promise.all(
+        data.otherLinks.map(async (link: any) => ({
+          title: (await this.buildLocalized(link.title, inputLang, subscribedLangs)) ?? {},
+          url: String(link.url),
         }))
-      : []);
-    if (uploadedDocuments.length > 0) {
-      mergedDocuments = mergedDocuments.concat(uploadedDocuments);
+      );
     }
-
-    let sharedURLName = data.name?.trim().replace(/\s+/g, "_").toLowerCase() || "" ;
-
-    // check any existing user already have this shareURLName
-    const userWithSameShareURL = await this.userRepo.findByShareUrlName(sharedURLName);
-
-    if (userWithSameShareURL) {
-      const now = new Date();
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      const ddmmyyyyhhmmss = pad(now.getDate()) + pad(now.getMonth() + 1) + now.getFullYear() + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-      sharedURLName = `${sharedURLName}_${ddmmyyyyhhmmss}`; // append timestamp in ddmmyyyyhhmmss format to make it unique
-    }
-    
-
-    const user = {
-      name: await this.buildLocalized(data.name, inputLang, subscribedLangs),
-      phoneNumber: data.phoneNumber,
-      personalAddress: await this.buildLocalized(data.personalAddress, inputLang, subscribedLangs),
-      personalWebsite: data.personalWebsite,
-      companyName: await this.buildLocalized(data.companyName, inputLang, subscribedLangs),
-      jobTitle: await this.buildLocalized(data.jobTitle, inputLang, subscribedLangs),
-      companyEmail: data.companyEmail,
-      companyPhoneNumber: data.companyPhoneNumber,
-      companyAddress: await this.buildLocalized(data.companyAddress, inputLang, subscribedLangs),
-      companyWebsite: data.companyWebsite,
-      whatsappNumber: data.whatsappNumber,
-      facebookUrl: data.facebookUrl,
-      instagramUrl: data.instagramUrl,
-      linkedInUrl: data.linkedInUrl,
-      tikTokUrl: data.tikTokUrl,
-      youtubeUrl: data.youtubeUrl,
-      profileImageUrl: profileImageUrl,
-
-      otherLinks: data.otherLinks
-        ? await Promise.all(
-            data.otherLinks.map(async (link: any) => ({
-              title: (await this.buildLocalized(link.title, inputLang, subscribedLangs)) ?? {},
-              url: String(link.url),
-            }))
-          )
-        : undefined,
-
-      documents: mergedDocuments,
-
-      updatedAt: new Date(),
-    };
 
     return this.userRepo.update(id, user);
   }
@@ -219,12 +156,12 @@ export default class UserService {
     return `${text}_${targetLang}`; // mock translation
   }
 
-  public async subscribeLanguage(userId: string, language: string, auth0Id: string): Promise<IUser | null> {
+  public async subscribeLanguage(userId: string, language: string, uid: string): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
-    if (!user.auth0Id || user.auth0Id !== auth0Id) {
-      throw new AuthorizationError("Unauthorized: Auth0 ID does not match");
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: User ID does not match");
     }
 
     const appConfig = await this.appGlobalConfigRepo.findAll();
@@ -294,6 +231,7 @@ export default class UserService {
         user.documents.map(async (doc: any) => ({
           title: (await this.buildLocalized(typeof doc.title === "string" ? doc.title : doc.title instanceof Map ? doc.title.get(preferredLang) || "" : doc.title?.[preferredLang] || "", preferredLang, subscribedLangs)) ?? {},
           url: String(doc.url),
+          _id: doc._id,
         }))
       );
     }
@@ -304,12 +242,12 @@ export default class UserService {
     return user;
   }
 
-  public async unsubscribeLanguage(userId: string, language: string, auth0Id: string): Promise<IUser | null> {
+  public async unsubscribeLanguage(userId: string, language: string, uid: string): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
-    if (!user.auth0Id || user.auth0Id !== auth0Id) {
-      throw new AuthorizationError("Unauthorized: Auth0 ID does not match");
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: User ID does not match");
     }
 
     user.languageSubscriptionList = user.languageSubscriptionList || [];
@@ -359,6 +297,7 @@ export default class UserService {
           user.documents.map(async (doc: any) => ({
             title: (this.buildLocalizedWithout(doc.title, language)) ?? {},
             url: String(doc.url),
+            _id: doc._id,
           }))
         );
       }
@@ -367,6 +306,96 @@ export default class UserService {
     user.updatedAt = new Date();
     console.log("Final user object to be saved after unsubscription:", user);
 
+    await this.userRepo.update(userId, user);
+    return user;
+  }
+
+  public async removeProfileImage(userId: string, uid: string): Promise<IUser | null> {
+    const user = await this.userRepo.findById(userId);
+
+    if (!user) throw new NotFoundError("User not found");
+
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: User ID does not match");
+    }
+
+    await deleteMedia(userId, "PROFILE", user.profileImageURL || "");
+
+    user.profileImageURL = "";
+    user.updatedAt = new Date();
+
+    await this.userRepo.update(userId, user);
+    return user;
+
+  }
+
+  public async getPreSignURL(userId: string, fileExtension: string, uid: string, title: string, language: string, type: string): Promise<{ uploadURL: string; fileURL: string } | null> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError("User not found");
+
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: Auth0 ID does not match");
+    }
+
+    if (type === "DOCUMENT" && (!user.subscriptionId || user.subscriptionId === null)) {
+        throw new BadRequestError("No subscription plan associated with user for document uploads");
+    }
+
+    if (type === "DOCUMENT" && user.subscriptionId) {
+        const subscriptionPlan = await this.subscriptionPlanRepo.findById(user.subscriptionId);
+
+        if (!subscriptionPlan) {
+          throw new NotFoundError("Subscription plan not found");
+        }
+
+        const docLimit = subscriptionPlan.document_upload_limit || 0;
+        const existingDocCount = user.documents ? user.documents.length : 0;
+
+        if (existingDocCount >= docLimit) {
+          throw new BadRequestError(`Document upload limit reached. Limit: ${docLimit}`);
+        }
+    }
+
+    const res = await getPreSignedURL(userId, fileExtension, type);
+    if (res.status === 0 && res.data) {
+      const { DocumentURL, DocumentKey } = res.data as { DocumentURL: string; DocumentKey: string };
+
+      if (type === "DOCUMENT") {
+        user.documents = user.documents || [];
+        const newDocuments = { title: (await this.buildLocalized(title, language, user.languageSubscriptionList || ["en"])) || {}, url: DocumentKey };
+        user.documents.push(newDocuments);
+      } else if (type === "PROFILE") {
+        user.profileImageURL = DocumentKey;
+      }
+      
+      user.updatedAt = new Date();
+
+      await this.userRepo.update(userId, user);
+
+      return { uploadURL: DocumentURL, fileURL: DocumentKey };
+    } else {
+      throw new Error("Failed to generate pre-signed URL");
+    }
+  }
+
+  public async deleteDocument(userId: string, documentId: string, uid: string, type: string): Promise<IUser | null> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError("User not found");
+
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: User ID does not match");
+    }
+
+    console.log("User documents before deletion:", user.documents);
+    console.log("Document ID to delete:", documentId);
+
+    const document = user.documents?.find(doc => doc._id?.toString() === documentId);
+    if (!document) {
+      throw new NotFoundError("Document not found");
+    }
+    user.documents = user.documents?.filter(doc => doc._id?.toString() !== documentId) || [];
+    user.updatedAt = new Date();
+    await deleteMedia(userId, type, document.url);
     await this.userRepo.update(userId, user);
     return user;
   }

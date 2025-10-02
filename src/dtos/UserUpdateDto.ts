@@ -20,9 +20,6 @@ export interface UserCreateDto {
   linkedInUrl?: string;
   tikTokUrl?: string;
   youtubeUrl?: string;
-  profileImage?: MulterFile;
   otherLinks?: { title: string; url: string }[];
-  newDocuments?: { title: string; file: MulterFile }[];
-  existingDocuments?: { title: string; url: string }[];
   language: string; // Primary language code
 }

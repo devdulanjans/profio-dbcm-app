@@ -8,9 +8,9 @@ import { NotFoundError } from "../errors/NotFoundError";
 export class ContactService {
   private repo = new ContactRepository();
 
-  async saveContact(userId: string, profileId: string, auth0Id: string, templateId: string) {
+  async saveContact(userId: string, profileId: string, uid: string, templateId: string) {
 
-    await this.authorizeUser(userId, auth0Id);
+    await this.authorizeUser(userId, uid);
 
     if (userId === profileId) { 
       throw new BadRequestError("Cannot save your own profile as a contact"); 
@@ -22,14 +22,14 @@ export class ContactService {
     return await this.repo.create({ user_id: userId, profile_id: profileId, template_id: templateId });
   }
 
-  async getContacts(userId: string, auth0Id: string) {
-    await this.authorizeUser(userId, auth0Id);
+  async getContacts(userId: string, uid: string) {
+    await this.authorizeUser(userId, uid);
 
     return await this.repo.findByUser(userId);
   }
 
-  async removeContact(contactId: string, auth0Id: string) {
-    const user = await UserRepository.findUserByAuth0Id(auth0Id);
+  async removeContact(contactId: string, uid: string) {
+    const user = await UserRepository.findUserByUid(uid);
     if (!user) throw new NotFoundError("User not found");
 
     const loggedInUserId = user.id;
@@ -43,14 +43,14 @@ export class ContactService {
     return await this.repo.delete(contactId);
   }
 
-  async checkSaved(userId: string, profileId: string, auth0Id: string) {
-    await this.authorizeUser(userId, auth0Id);
+  async checkSaved(userId: string, profileId: string, uid: string) {
+    await this.authorizeUser(userId, uid);
 
     return await this.repo.isSaved(userId, profileId);
   }
 
-  private async authorizeUser(userId: string, auth0Id: string) {
-    const user = await UserRepository.findUserByAuth0Id(auth0Id);
+  private async authorizeUser(userId: string, uid: string) {
+    const user = await UserRepository.findUserByUid(uid);
     if (!user) throw new Error("User not found");
 
     const loggedInUserId = user.id;
