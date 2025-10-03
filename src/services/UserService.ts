@@ -83,68 +83,156 @@ export default class UserService {
   }
 
 
+  // public async updateUser(id: string, data: Partial<UserCreateDto>) {
+  //   const inputLang = data.language || "en";
+
+  //   const existingUser = await this.userRepo.findById(id);
+  //   if (!existingUser) {
+  //     throw new Error("User not found");
+  //   }
+
+  //   const subscribedLangs = existingUser.languageSubscriptionList || ["en"];
+
+  //   if (!subscribedLangs.includes(inputLang)) {
+  //     throw new BadRequestError(`Language ${inputLang} not subscribed`);
+  //   }
+
+  //   // build update object only with fields provided
+  //   const user: Record<string, any> = {};
+  //   user.updatedAt = new Date();
+
+  //   if (!existingUser.shareURLName || existingUser.shareURLName.trim() === "") {
+  //     let sharedURLName = data.name?.trim().replace(/\s+/g, "_").toLowerCase() || "" ;
+
+  //     // check any existing user already have this shareURLName
+  //     const userWithSameShareURL = await this.userRepo.findByShareUrlName(sharedURLName);
+
+  //     if (userWithSameShareURL) {
+  //       const now = new Date();
+  //       const pad = (n: number) => n.toString().padStart(2, '0');
+  //       const ddmmyyyyhhmmss = pad(now.getDate()) + pad(now.getMonth() + 1) + now.getFullYear() + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+  //       sharedURLName = `${sharedURLName}_${ddmmyyyyhhmmss}`; // append timestamp in ddmmyyyyhhmmss format to make it unique
+  //     }
+  //     user.shareURLName = sharedURLName;
+  //   }
+    
+
+  //   if (data.name) user.name = await this.buildLocalized(data.name, inputLang, subscribedLangs);
+  //   if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
+  //   if (data.personalAddress) user.personalAddress = await this.buildLocalized(data.personalAddress, inputLang, subscribedLangs);
+  //   if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
+  //   if (data.companyName) user.companyName = await this.buildLocalized(data.companyName, inputLang, subscribedLangs);
+  //   if (data.jobTitle) user.jobTitle = await this.buildLocalized(data.jobTitle, inputLang, subscribedLangs);
+  //   if (data.companyEmail) user.companyEmail = data.companyEmail;
+  //   if (data.companyPhoneNumber) user.companyPhoneNumber = data.companyPhoneNumber;
+  //   if (data.companyAddress) user.companyAddress = await this.buildLocalized(data.companyAddress, inputLang, subscribedLangs);
+  //   if (data.companyWebsite) user.companyWebsite = data.companyWebsite;
+  //   if (data.whatsappNumber) user.whatsappNumber = data.whatsappNumber;
+  //   if (data.facebookUrl) user.facebookUrl = data.facebookUrl;
+  //   if (data.instagramUrl) user.instagramUrl = data.instagramUrl;
+  //   if (data.linkedInUrl) user.linkedInUrl = data.linkedInUrl;
+  //   if (data.tikTokUrl) user.tikTokUrl = data.tikTokUrl;
+  //   if (data.youtubeUrl) user.youtubeUrl = data.youtubeUrl;
+
+  //   if (data.otherLinks) {
+  //     user.otherLinks = await Promise.all(
+  //       data.otherLinks.map(async (link: any) => ({
+  //         title: (await this.buildLocalized(link.title, inputLang, subscribedLangs)) ?? {},
+  //         url: String(link.url),
+  //       }))
+  //     );
+  //   }
+
+  //   return this.userRepo.update(id, user);
+  // }
+
   public async updateUser(id: string, data: Partial<UserCreateDto>) {
-    const inputLang = data.language || "en";
+  const existingUser = await this.userRepo.findById(id);
+  if (!existingUser) {
+    throw new Error("User not found");
+  }
 
-    const existingUser = await this.userRepo.findById(id);
-    if (!existingUser) {
-      throw new Error("User not found");
-    }
+  const subscribedLangs = existingUser.languageSubscriptionList || ["en"];
 
-    const subscribedLangs = existingUser.languageSubscriptionList || ["en"];
+  const user: Record<string, any> = {};
+  user.updatedAt = new Date();
 
-    if (!subscribedLangs.includes(inputLang)) {
-      throw new BadRequestError(`Language ${inputLang} not subscribed`);
-    }
+  // generate shareURLName if not already set
+  if (!existingUser.shareURLName || existingUser.shareURLName.trim() === "") {
+    let sharedURLName =
+      data.name && typeof data.name === "object"
+        ? (data.name["en"] || "").trim().replace(/\s+/g, "_").toLowerCase()
+        : "";
 
-    // build update object only with fields provided
-    const user: Record<string, any> = {};
-    user.updatedAt = new Date();
-
-    if (!existingUser.shareURLName || existingUser.shareURLName.trim() === "") {
-      let sharedURLName = data.name?.trim().replace(/\s+/g, "_").toLowerCase() || "" ;
-
-      // check any existing user already have this shareURLName
+    if (sharedURLName) {
       const userWithSameShareURL = await this.userRepo.findByShareUrlName(sharedURLName);
 
       if (userWithSameShareURL) {
         const now = new Date();
-        const pad = (n: number) => n.toString().padStart(2, '0');
-        const ddmmyyyyhhmmss = pad(now.getDate()) + pad(now.getMonth() + 1) + now.getFullYear() + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-        sharedURLName = `${sharedURLName}_${ddmmyyyyhhmmss}`; // append timestamp in ddmmyyyyhhmmss format to make it unique
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const ddmmyyyyhhmmss =
+          pad(now.getDate()) +
+          pad(now.getMonth() + 1) +
+          now.getFullYear() +
+          pad(now.getHours()) +
+          pad(now.getMinutes()) +
+          pad(now.getSeconds());
+        sharedURLName = `${sharedURLName}_${ddmmyyyyhhmmss}`;
       }
+
       user.shareURLName = sharedURLName;
     }
-    
-
-    if (data.name) user.name = await this.buildLocalized(data.name, inputLang, subscribedLangs);
-    if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
-    if (data.personalAddress) user.personalAddress = await this.buildLocalized(data.personalAddress, inputLang, subscribedLangs);
-    if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
-    if (data.companyName) user.companyName = await this.buildLocalized(data.companyName, inputLang, subscribedLangs);
-    if (data.jobTitle) user.jobTitle = await this.buildLocalized(data.jobTitle, inputLang, subscribedLangs);
-    if (data.companyEmail) user.companyEmail = data.companyEmail;
-    if (data.companyPhoneNumber) user.companyPhoneNumber = data.companyPhoneNumber;
-    if (data.companyAddress) user.companyAddress = await this.buildLocalized(data.companyAddress, inputLang, subscribedLangs);
-    if (data.companyWebsite) user.companyWebsite = data.companyWebsite;
-    if (data.whatsappNumber) user.whatsappNumber = data.whatsappNumber;
-    if (data.facebookUrl) user.facebookUrl = data.facebookUrl;
-    if (data.instagramUrl) user.instagramUrl = data.instagramUrl;
-    if (data.linkedInUrl) user.linkedInUrl = data.linkedInUrl;
-    if (data.tikTokUrl) user.tikTokUrl = data.tikTokUrl;
-    if (data.youtubeUrl) user.youtubeUrl = data.youtubeUrl;
-
-    if (data.otherLinks) {
-      user.otherLinks = await Promise.all(
-        data.otherLinks.map(async (link: any) => ({
-          title: (await this.buildLocalized(link.title, inputLang, subscribedLangs)) ?? {},
-          url: String(link.url),
-        }))
-      );
-    }
-
-    return this.userRepo.update(id, user);
   }
+
+  // helpers
+  const validateLangObject = (field: any, fieldName: string) => {
+    if (typeof field !== "object" || Array.isArray(field)) {
+      throw new BadRequestError(`${fieldName} must be an object with language keys`);
+    }
+    for (const lang of Object.keys(field)) {
+      if (!subscribedLangs.includes(lang)) {
+        throw new BadRequestError(`Language ${lang} not subscribed`);
+      }
+    }
+    return field;
+  };
+
+  const mergeLocalized = (existing: Record<string, string> = {},incoming: Record<string, string>, fieldName: string) => {
+    const validated = validateLangObject(incoming, fieldName);
+    return { ...existing, ...validated }; // merge & overwrite same lang
+  };
+
+  // localized fields
+  if (data.name) user.name = mergeLocalized(existingUser.name, data.name, "name");
+  if (data.personalAddress) user.personalAddress = mergeLocalized(existingUser.personalAddress, data.personalAddress, "personalAddress");
+  if (data.companyName) user.companyName = mergeLocalized(existingUser.companyName, data.companyName, "companyName");
+  if (data.jobTitle) user.jobTitle = mergeLocalized(existingUser.jobTitle, data.jobTitle, "jobTitle");
+  if (data.companyAddress) user.companyAddress = mergeLocalized(existingUser.companyAddress, data.companyAddress, "companyAddress");
+
+  // non-localized fields
+  if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
+  if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
+  if (data.companyEmail) user.companyEmail = data.companyEmail;
+  if (data.companyPhoneNumber) user.companyPhoneNumber = data.companyPhoneNumber;
+  if (data.companyWebsite) user.companyWebsite = data.companyWebsite;
+  if (data.whatsappNumber) user.whatsappNumber = data.whatsappNumber;
+  if (data.facebookUrl) user.facebookUrl = data.facebookUrl;
+  if (data.instagramUrl) user.instagramUrl = data.instagramUrl;
+  if (data.linkedInUrl) user.linkedInUrl = data.linkedInUrl;
+  if (data.tikTokUrl) user.tikTokUrl = data.tikTokUrl;
+  if (data.youtubeUrl) user.youtubeUrl = data.youtubeUrl;
+
+  if (data.otherLinks) {
+    user.otherLinks = data.otherLinks.map((link: any, idx: number) => ({
+      title: mergeLocalized(existingUser.otherLinks?.[idx]?.title, link.title, `otherLinks[${idx}].title`),
+      url: String(link.url),
+    }));
+  }
+
+  return this.userRepo.update(id, user);
+}
+
+
 
   public async deleteUser(id: string) {
     return this.userRepo.delete(id);

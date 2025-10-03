@@ -6,7 +6,7 @@ import userTemplateRoutes from "./routes/userTemplateRoutes";
 import contactRoutes from "./routes/contactRoutes";
 import publicRoutes from "./routes/publicRoutes";
 import appGlobalConfigRoutes from "./routes/appGlobalConfigRoutes";
-import accessRoutes from "./routes/AccessRoutes";
+import accessRoutes from "./routes/accessRoutes";
 import { checkJwt } from "./middleware/authMiddleware";
 import { checkFirebaseJwt } from "./middleware/firebaseMiddleware";
 // import UserRepository from "./repositories/UserRepository";

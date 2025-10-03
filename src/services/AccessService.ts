@@ -2,6 +2,7 @@ import AppGlobalConfigRepo from "../repositories/AppGlobalConfigRepository";
 import UserRepository from "../repositories/UserRepository";
 import SubscriptionRepository from "../repositories/SubscriptionPlanRepository";
 import { UserDto } from "../dtos/UserDto"; // Adjust the path as needed
+import { sendWelcomeEmail } from "../utils/SendEmail"; // Adjust the path as needed
 
 class AccessService {
   private repo = new UserRepository();
@@ -29,6 +30,11 @@ class AccessService {
 
     const userToCreate: UserDto = { uid: uid, email: email, isDeleted: false, createdAt: new Date(), updatedAt: new Date(), subscriptionId: subscriptionId, languageSubscriptionList: ["en"] };
     const createdUser = await UserRepository.create(userToCreate);
+
+    const payload = {
+      email: createdUser.email,
+    }
+    await sendWelcomeEmail(email, payload);
 
     return createdUser;
   }

@@ -1,18 +1,16 @@
-import { Express } from 'express';
-
-type MulterFile = Express.Multer.File;
+import { ILocalizedField } from "./UserDto";
 
 export interface UserCreateDto {
   id: string;
-  name?: string;
+  name?: ILocalizedField;
   phoneNumber?: string;
-  personalAddress?: string;
+  personalAddress?: ILocalizedField;
   personalWebsite?: string;
-  companyName?: string;
-  jobTitle?: string;
+  companyName?: ILocalizedField;
+  jobTitle?: ILocalizedField;
   companyEmail?: string;
   companyPhoneNumber?: string;
-  companyAddress?: string;
+  companyAddress?: ILocalizedField;
   companyWebsite?: string;
   whatsappNumber?: string;
   facebookUrl?: string;
@@ -20,6 +18,5 @@ export interface UserCreateDto {
   linkedInUrl?: string;
   tikTokUrl?: string;
   youtubeUrl?: string;
-  otherLinks?: { title: string; url: string }[];
-  language: string; // Primary language code
+  otherLinks?: { title: ILocalizedField; url: string }[];
 }
