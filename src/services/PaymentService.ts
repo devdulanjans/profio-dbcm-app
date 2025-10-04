@@ -1,17 +1,17 @@
 import PaymentRepository from "../repositories/PaymentRepository";
 import UserRepository from "../repositories/UserRepository";
 import { PaymentCreateDto } from "../dtos/PaymentCreateDto";
-import Stripe from "stripe";
+// import Stripe from "stripe";
 
 class PaymentService {
   private repo = new PaymentRepository();
   private userRepo = new UserRepository();
-  private stripe: Stripe;
+  // private stripe: Stripe;
 
    constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2025-09-30.clover",
-    });
+    // this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    //   apiVersion: "2025-09-30.clover",
+    // });
   }
 
   async createPaymentRecord(uid: string, userId: string, amount: number, currencyCode: string, paymentId: string) {
@@ -26,16 +26,16 @@ class PaymentService {
       throw new Error("Unauthorized to create payment record for this user");
     }
 
-    const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentId);
+    // const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentId);
 
-    if (paymentIntent.status !== "succeeded") {
-      throw new Error(`Payment not successful. Current status: ${paymentIntent.status}`);
-    }
+    // if (paymentIntent.status !== "succeeded") {
+    //   throw new Error(`Payment not successful. Current status: ${paymentIntent.status}`);
+    // }
 
     
-    if (paymentIntent.amount !== amount || paymentIntent.currency !== currencyCode.toLowerCase()) {
-      throw new Error("Payment details mismatch with Stripe");
-    }
+    // if (paymentIntent.amount !== amount || paymentIntent.currency !== currencyCode.toLowerCase()) {
+    //   throw new Error("Payment details mismatch with Stripe");
+    // }
 
     const paymentRecord: PaymentCreateDto = {userId, amount, currencyCode, paymentId};
     const createdPayment = await this.repo.create(paymentRecord);

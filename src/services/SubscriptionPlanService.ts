@@ -2,21 +2,21 @@ import SupscriptionPlanRepo from "../repositories/SubscriptionPlanRepository";
 import UserRepository from "../repositories/UserRepository";
 import PaymentRepository from "../repositories/PaymentRepository";
 import { PaymentCreateDto } from "../dtos/PaymentCreateDto";
-import Stripe from "stripe";
+// import Stripe from "stripe";
 
 export default class SubscriptionPlanService {
   private subscriptionRepo: SupscriptionPlanRepo;
   private userRepository: UserRepository;
   private paymentRepository: PaymentRepository;
-  private stripe: Stripe;
+  // private stripe: Stripe;
 
   constructor() {
     this.subscriptionRepo = new SupscriptionPlanRepo();
     this.userRepository = new UserRepository();
     this.paymentRepository = new PaymentRepository();
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2025-09-30.clover",
-    });
+    // this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    //   apiVersion: "2025-09-30.clover",
+    // });
   }
 
   public async getAllSubscriptions() {
@@ -52,16 +52,16 @@ export default class SubscriptionPlanService {
       throw new Error("Subscription plan not found");
     }
 
-    const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentId);
+    // const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentId);
 
-    if (paymentIntent.status !== "succeeded") {
-      throw new Error(`Payment not successful. Current status: ${paymentIntent.status}`);
-    }
+    // if (paymentIntent.status !== "succeeded") {
+    //   throw new Error(`Payment not successful. Current status: ${paymentIntent.status}`);
+    // }
 
     
-    if (paymentIntent.amount !== amount || paymentIntent.currency !== currencyCode.toLowerCase()) {
-      throw new Error("Payment details mismatch with Stripe");
-    }
+    // if (paymentIntent.amount !== amount || paymentIntent.currency !== currencyCode.toLowerCase()) {
+    //   throw new Error("Payment details mismatch with Stripe");
+    // }
 
     const paymentDate = new Date();
     let nextPaymentDate = new Date(paymentDate);
