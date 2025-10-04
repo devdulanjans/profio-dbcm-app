@@ -218,8 +218,14 @@ export const getPreSignURL = async (req: Request, res: Response, next: Function)
 
   const { userId, fileExtension, title, type } = req.body;
 
-  if (!userId || !fileExtension || !title  || !type) {
+  if (type === "PROFILE"){
+    if (!userId || !fileExtension || !type) {
+    return res.status(400).json({ message: "User ID, file extension, and type are required" });
+  }
+  } else if (type === "DOCUMENT"){
+    if (!userId || !fileExtension || !title  || !type) {
     return res.status(400).json({ message: "User ID, file extension, title, and type are required" });
+  }
   }
 
   if (type !== "DOCUMENT" && type !== "PROFILE") {
