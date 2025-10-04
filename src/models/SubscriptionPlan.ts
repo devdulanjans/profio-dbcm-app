@@ -13,6 +13,8 @@ export interface ISubscriptionPlan extends Document {
     is_active: boolean; // Availability status
     created_at: Date; // Creation timestamp
     updated_at: Date; // Last updated timestamp
+    amount?: number; // Subscription amount
+    currencyCode?: string; // Currency code (e.g., USD, EUR)
 }
 
 const subscriptionSchema = new Schema<ISubscriptionPlan>({
@@ -26,7 +28,9 @@ const subscriptionSchema = new Schema<ISubscriptionPlan>({
     isShowProfileClickCount: { type: Boolean, default: true },
     is_active: { type: Boolean, default: true },
     created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
+    updated_at: { type: Date, default: Date.now },
+    amount: { type: Number, required: true },
+    currencyCode: { type: String, required: true },
 });
 
 export const SubscriptionPlanModel = model<ISubscriptionPlan>("SubscriptionPlan", subscriptionSchema, "subscription_plan");

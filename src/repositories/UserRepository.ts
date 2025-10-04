@@ -39,6 +39,10 @@ export default class UserRepository {
     return User.findByIdAndUpdate(id, data);
   }
 
+  public async updatePaymentSubscriptionDetails(id: string, lastPaymentDate: Date, nextPaymentDate: Date): Promise<IUser | null> {
+    return User.findByIdAndUpdate(id, { lastPaymentDate, nextPaymentDate }, { new: true });
+  }
+
   public async delete(id: string) {
     return User.findByIdAndDelete(id);
   }

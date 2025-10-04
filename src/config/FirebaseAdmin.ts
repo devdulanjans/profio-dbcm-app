@@ -1,10 +1,9 @@
-import admin, { ServiceAccount } from "firebase-admin";
-import serviceAccountJson from "../utils/profio-dbcm-app-firebase-adminsdk-fbsvc-ebec6b87c3.json";
+import * as admin from "firebase-admin";
 
-const serviceAccount = serviceAccountJson as ServiceAccount;
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount)
 });
 
 export const firebaseAdmin = admin;

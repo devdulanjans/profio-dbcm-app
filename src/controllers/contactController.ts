@@ -14,13 +14,13 @@ export class ContactController {
         return res.status(401).json({ status: "Error", message: "Unauthorized: user.uid not found" });
       }
 
-      const { profileId, userId, templateId } = req.body;
+      const { profileId, userId, templateId, language } = req.body;
 
-      if (!profileId || !userId || !templateId) {
+      if (!profileId || !userId || !templateId || !language) {
         return res.status(400).json({ status: "Error", message: "Bad Request: Missing required fields" });
       }
 
-      const contact = await service.saveContact(userId, profileId, uid, templateId);
+      const contact = await service.saveContact(userId, profileId, uid, templateId, language);
 
       res.json({ status: 0, message: "Contact saved successfully", data: contact });
 

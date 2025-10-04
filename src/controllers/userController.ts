@@ -1,5 +1,5 @@
 // src/controllers/userController.ts
-import { json, Request, Response } from "express";
+import e, { json, Request, Response } from "express";
 import UserService from "../services/UserService";
 import { log } from "console";
 
@@ -68,6 +68,39 @@ export const updateUser = async (req: Request, res: Response, next: Function) =>
     next(error);
   }
   
+};
+
+export const updatePaymentSubscriptionPlan = async (req: Request, res: Response, next: Function) => {
+
+  const uid = (req as any).user?.uid;
+
+  if (!uid) {
+    return res.status(400).json({ message: "UID is required" });
+  }
+
+  const userId = req.params.id;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  const { paymentSubscriptionType} = req.body;
+
+  if (!paymentSubscriptionType) {
+    return res.status(400).json({ message: "Payment subscription type is required" });
+  }
+
+  try {
+    const updatedUser = await userService.updatePaymentSubscriptionPlan(userId, paymentSubscriptionType, uid);
+
+    if (!updatedUser) return res.status(404).json({ message: "Not found" });
+
+    res.json({ status: 0, message: "Payment subscription plan updated successfully", data: updatedUser });
+    
+  } catch (error) {
+    log("Error in updatePaymentSubscriptionPlan:", error);
+    next(error);
+  }
 };
 
 
@@ -183,10 +216,10 @@ export const getPreSignURL = async (req: Request, res: Response, next: Function)
     return res.status(400).json({ message: "UID is required" });
   }
 
-  const { userId, fileExtension, title, language, type } = req.body;
+  const { userId, fileExtension, title, type } = req.body;
 
-  if (!userId || !fileExtension || !title || !language || !type) {
-    return res.status(400).json({ message: "User ID, file extension, title, language, and type are required" });
+  if (!userId || !fileExtension || !title  || !type) {
+    return res.status(400).json({ message: "User ID, file extension, title, and type are required" });
   }
 
   if (type !== "DOCUMENT" && type !== "PROFILE") {
@@ -198,7 +231,7 @@ export const getPreSignURL = async (req: Request, res: Response, next: Function)
   }
 
   try {
-    const presignURL = await userService.getPreSignURL(userId, fileExtension, uid, title, language , type);
+    const presignURL = await userService.getPreSignURL(userId, fileExtension, uid, title , type);
     res.json({ status: 0, message: "Pre-signed URL generated successfully", data: presignURL });
   } catch (error) {
     log("Error in getPreSignURL:", error);

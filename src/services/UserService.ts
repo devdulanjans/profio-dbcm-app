@@ -47,19 +47,19 @@ export default class UserService {
     return UserRepository.create(data);
   }
 
-  private async buildLocalized(value: string | undefined, inputLang: string, subscribedLangs: string[]): Promise<Record<string, string> | undefined> {
-    if (!value) return undefined;
+  // private async buildLocalized(value: string | undefined, inputLang: string, subscribedLangs: string[]): Promise<Record<string, string> | undefined> {
+  //   if (!value) return undefined;
 
-    const translations: Record<string, string> = { [inputLang]: value };
+  //   const translations: Record<string, string> = { [inputLang]: value };
 
-    for (const lang of subscribedLangs) {
-      if (lang !== inputLang) {
-        translations[lang] = await this.translateText(value, lang);
-      }
-    }
+  //   for (const lang of subscribedLangs) {
+  //     if (lang !== inputLang) {
+  //       translations[lang] = await this.translateText(value, lang);
+  //     }
+  //   }
 
-    return translations;
-  }
+  //   return translations;
+  // }
 
   private buildLocalizedWithout(translations: Record<string, string> | Map<string, string> | undefined, inputLang: string): Record<string, string> | undefined {
     if (!translations) return undefined;
@@ -147,102 +147,123 @@ export default class UserService {
   // }
 
   public async updateUser(id: string, data: Partial<UserCreateDto>) {
-  const existingUser = await this.userRepo.findById(id);
-  if (!existingUser) {
-    throw new Error("User not found");
-  }
-
-  const subscribedLangs = existingUser.languageSubscriptionList || ["en"];
-
-  const user: Record<string, any> = {};
-  user.updatedAt = new Date();
-
-  // generate shareURLName if not already set
-  if (!existingUser.shareURLName || existingUser.shareURLName.trim() === "") {
-    let sharedURLName =
-      data.name && typeof data.name === "object"
-        ? (data.name["en"] || "").trim().replace(/\s+/g, "_").toLowerCase()
-        : "";
-
-    if (sharedURLName) {
-      const userWithSameShareURL = await this.userRepo.findByShareUrlName(sharedURLName);
-
-      if (userWithSameShareURL) {
-        const now = new Date();
-        const pad = (n: number) => n.toString().padStart(2, "0");
-        const ddmmyyyyhhmmss =
-          pad(now.getDate()) +
-          pad(now.getMonth() + 1) +
-          now.getFullYear() +
-          pad(now.getHours()) +
-          pad(now.getMinutes()) +
-          pad(now.getSeconds());
-        sharedURLName = `${sharedURLName}_${ddmmyyyyhhmmss}`;
-      }
-
-      user.shareURLName = sharedURLName;
+    const existingUser = await this.userRepo.findById(id);
+    if (!existingUser) {
+      throw new Error("User not found");
     }
-  }
 
-  // helpers
-  const validateLangObject = (field: any, fieldName: string) => {
-    if (typeof field !== "object" || Array.isArray(field)) {
-      throw new BadRequestError(`${fieldName} must be an object with language keys`);
-    }
-    for (const lang of Object.keys(field)) {
-      if (!subscribedLangs.includes(lang)) {
-        throw new BadRequestError(`Language ${lang} not subscribed`);
+    const subscribedLangs = existingUser.languageSubscriptionList || ["en"];
+
+    const user: Record<string, any> = {};
+    user.updatedAt = new Date();
+
+    // generate shareURLName if not already set
+    if (!existingUser.shareURLName || existingUser.shareURLName.trim() === "") {
+      let sharedURLName =
+        data.name && typeof data.name === "object"
+          ? (data.name["en"] || "").trim().replace(/\s+/g, "_").toLowerCase()
+          : "";
+
+      if (sharedURLName) {
+        const userWithSameShareURL = await this.userRepo.findByShareUrlName(sharedURLName);
+
+        if (userWithSameShareURL) {
+          const now = new Date();
+          const pad = (n: number) => n.toString().padStart(2, "0");
+          const ddmmyyyyhhmmss =
+            pad(now.getDate()) +
+            pad(now.getMonth() + 1) +
+            now.getFullYear() +
+            pad(now.getHours()) +
+            pad(now.getMinutes()) +
+            pad(now.getSeconds());
+          sharedURLName = `${sharedURLName}_${ddmmyyyyhhmmss}`;
+        }
+
+        user.shareURLName = sharedURLName;
       }
     }
-    return field;
-  };
 
-  const mergeLocalized = (existing: Record<string, string> = {},incoming: Record<string, string>, fieldName: string) => {
-    const validated = validateLangObject(incoming, fieldName);
-    return { ...existing, ...validated }; // merge & overwrite same lang
-  };
+    // helpers
+    const validateLangObject = (field: any, fieldName: string) => {
+      if (typeof field !== "object" || Array.isArray(field)) {
+        throw new BadRequestError(`${fieldName} must be an object with language keys`);
+      }
+      for (const lang of Object.keys(field)) {
+        if (!subscribedLangs.includes(lang)) {
+          throw new BadRequestError(`Language ${lang} not subscribed`);
+        }
+      }
+      return field;
+    };
 
-  // localized fields
-  if (data.name) user.name = mergeLocalized(existingUser.name, data.name, "name");
-  if (data.personalAddress) user.personalAddress = mergeLocalized(existingUser.personalAddress, data.personalAddress, "personalAddress");
-  if (data.companyName) user.companyName = mergeLocalized(existingUser.companyName, data.companyName, "companyName");
-  if (data.jobTitle) user.jobTitle = mergeLocalized(existingUser.jobTitle, data.jobTitle, "jobTitle");
-  if (data.companyAddress) user.companyAddress = mergeLocalized(existingUser.companyAddress, data.companyAddress, "companyAddress");
+    const mergeLocalized = (existing: Record<string, string> = {},incoming: Record<string, string>, fieldName: string) => {
+      const validated = validateLangObject(incoming, fieldName);
+      return { ...existing, ...validated }; // merge & overwrite same lang
+    };
 
-  // non-localized fields
-  if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
-  if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
-  if (data.companyEmail) user.companyEmail = data.companyEmail;
-  if (data.companyPhoneNumber) user.companyPhoneNumber = data.companyPhoneNumber;
-  if (data.companyWebsite) user.companyWebsite = data.companyWebsite;
-  if (data.whatsappNumber) user.whatsappNumber = data.whatsappNumber;
-  if (data.facebookUrl) user.facebookUrl = data.facebookUrl;
-  if (data.instagramUrl) user.instagramUrl = data.instagramUrl;
-  if (data.linkedInUrl) user.linkedInUrl = data.linkedInUrl;
-  if (data.tikTokUrl) user.tikTokUrl = data.tikTokUrl;
-  if (data.youtubeUrl) user.youtubeUrl = data.youtubeUrl;
+    // localized fields
+    if (data.name) user.name = mergeLocalized(existingUser.name, data.name, "name");
+    if (data.personalAddress) user.personalAddress = mergeLocalized(existingUser.personalAddress, data.personalAddress, "personalAddress");
+    if (data.companyName) user.companyName = mergeLocalized(existingUser.companyName, data.companyName, "companyName");
+    if (data.jobTitle) user.jobTitle = mergeLocalized(existingUser.jobTitle, data.jobTitle, "jobTitle");
+    if (data.companyAddress) user.companyAddress = mergeLocalized(existingUser.companyAddress, data.companyAddress, "companyAddress");
 
-  if (data.otherLinks) {
-    user.otherLinks = data.otherLinks.map((link: any, idx: number) => ({
-      title: mergeLocalized(existingUser.otherLinks?.[idx]?.title, link.title, `otherLinks[${idx}].title`),
-      url: String(link.url),
-    }));
+    // non-localized fields
+    if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
+    if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
+    if (data.companyEmail) user.companyEmail = data.companyEmail;
+    if (data.companyPhoneNumber) user.companyPhoneNumber = data.companyPhoneNumber;
+    if (data.companyWebsite) user.companyWebsite = data.companyWebsite;
+    if (data.whatsappNumber) user.whatsappNumber = data.whatsappNumber;
+    if (data.facebookUrl) user.facebookUrl = data.facebookUrl;
+    if (data.instagramUrl) user.instagramUrl = data.instagramUrl;
+    if (data.linkedInUrl) user.linkedInUrl = data.linkedInUrl;
+    if (data.tikTokUrl) user.tikTokUrl = data.tikTokUrl;
+    if (data.youtubeUrl) user.youtubeUrl = data.youtubeUrl;
+
+    if (data.otherLinks) {
+      user.otherLinks = data.otherLinks.map((link: any, idx: number) => ({
+        title: mergeLocalized(existingUser.otherLinks?.[idx]?.title, link.title, `otherLinks[${idx}].title`),
+        url: String(link.url),
+      }));
+    }
+
+    return this.userRepo.update(id, user);
   }
 
-  return this.userRepo.update(id, user);
-}
+  public async updatePaymentSubscriptionPlan(userId: string, paymentSubscriptionType: string, uid: string): Promise<IUser | null> {
+    const user = await this.userRepo.findById(userId);
 
+    if (!user) throw new NotFoundError("User not found");
 
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: User ID does not match");
+    }
+
+    if (paymentSubscriptionType !== "MONTHLY" && paymentSubscriptionType !== "YEARLY") {
+      throw new BadRequestError("Invalid payment subscription type");
+    }
+
+    if (user.paymentSubscriptionType === paymentSubscriptionType) {
+      throw new BadRequestError(`User already has ${paymentSubscriptionType} subscription`);
+    }
+
+    user.paymentSubscriptionType = paymentSubscriptionType;
+    user.updatedAt = new Date();
+    await this.userRepo.update(userId, user);
+    return user;
+  }
 
   public async deleteUser(id: string) {
     return this.userRepo.delete(id);
   }
 
-  private async translateText(text: string, targetLang: string): Promise<string> {
-    // Call Google Translate, DeepL, or your own service
-    // Example: return await googleTranslate(text, targetLang);
-    return `${text}_${targetLang}`; // mock translation
-  }
+  // private async translateText(text: string, targetLang: string): Promise<string> {
+  //   // Call Google Translate, DeepL, or your own service
+  //   // Example: return await googleTranslate(text, targetLang);
+  //   return `${text}_${targetLang}`; // mock translation
+  // }
 
   public async subscribeLanguage(userId: string, language: string, uid: string): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
@@ -292,37 +313,37 @@ export default class UserService {
 
     console.log("Updated subscribed languages:", user.languageSubscriptionList);
 
-    const subscribedLangs = user.languageSubscriptionList;
+    // const subscribedLangs = user.languageSubscriptionList;
 
     // Determine the inputLang for localization: prefer 'en', else first subscribed language
-    const preferredLang = subscribedLangs.includes("en") ? "en" : subscribedLangs[0];
-    console.log("Preferred language for localization:", preferredLang);
+    // const preferredLang = subscribedLangs.includes("en") ? "en" : subscribedLangs[0];
+    // console.log("Preferred language for localization:", preferredLang);
 
     user.updatedAt = new Date();
-    user.name = await this.buildLocalized(typeof user.name === "string" ? user.name : user.name instanceof Map ? user.name.get(preferredLang) || "" : user.name?.[preferredLang] || "", preferredLang, subscribedLangs );
-    user.personalAddress = await this.buildLocalized(typeof user.personalAddress === "string" ? user.personalAddress : user.personalAddress instanceof Map ? user.personalAddress.get(preferredLang) || "" : user.personalAddress?.[preferredLang] || "", preferredLang, subscribedLangs);
-    user.companyName = await this.buildLocalized(typeof user.companyName === "string" ? user.companyName : user.companyName instanceof Map ? user.companyName.get(preferredLang) || "" : user.companyName?.[preferredLang] || "", preferredLang, subscribedLangs);
-    user.jobTitle = await this.buildLocalized(typeof user.jobTitle === "string" ? user.jobTitle : user.jobTitle instanceof Map ? user.jobTitle.get(preferredLang) || "" : user.jobTitle?.[preferredLang] || "", preferredLang, subscribedLangs);
-    user.companyAddress = await this.buildLocalized(typeof user.companyAddress === "string" ? user.companyAddress : user.companyAddress instanceof Map ? user.companyAddress.get(preferredLang) || "" : user.companyAddress?.[preferredLang] || "", preferredLang, subscribedLangs);
+    // user.name = await this.buildLocalized(typeof user.name === "string" ? user.name : user.name instanceof Map ? user.name.get(preferredLang) || "" : user.name?.[preferredLang] || "", preferredLang, subscribedLangs );
+    // user.personalAddress = await this.buildLocalized(typeof user.personalAddress === "string" ? user.personalAddress : user.personalAddress instanceof Map ? user.personalAddress.get(preferredLang) || "" : user.personalAddress?.[preferredLang] || "", preferredLang, subscribedLangs);
+    // user.companyName = await this.buildLocalized(typeof user.companyName === "string" ? user.companyName : user.companyName instanceof Map ? user.companyName.get(preferredLang) || "" : user.companyName?.[preferredLang] || "", preferredLang, subscribedLangs);
+    // user.jobTitle = await this.buildLocalized(typeof user.jobTitle === "string" ? user.jobTitle : user.jobTitle instanceof Map ? user.jobTitle.get(preferredLang) || "" : user.jobTitle?.[preferredLang] || "", preferredLang, subscribedLangs);
+    // user.companyAddress = await this.buildLocalized(typeof user.companyAddress === "string" ? user.companyAddress : user.companyAddress instanceof Map ? user.companyAddress.get(preferredLang) || "" : user.companyAddress?.[preferredLang] || "", preferredLang, subscribedLangs);
 
-    if (user.otherLinks) {
-      user.otherLinks = await Promise.all(
-        user.otherLinks.map(async (link: any) => ({
-          title: (await this.buildLocalized(typeof link.title === "string" ? link.title : link.title instanceof Map ? link.title.get(preferredLang) || "" : link.title?.[preferredLang] || "", preferredLang, subscribedLangs)) ?? {},
-          url: String(link.url),
-        }))
-      );
-    }
+    // if (user.otherLinks) {
+    //   user.otherLinks = await Promise.all(
+    //     user.otherLinks.map(async (link: any) => ({
+    //       title: (await this.buildLocalized(typeof link.title === "string" ? link.title : link.title instanceof Map ? link.title.get(preferredLang) || "" : link.title?.[preferredLang] || "", preferredLang, subscribedLangs)) ?? {},
+    //       url: String(link.url),
+    //     }))
+    //   );
+    // }
 
-    if (user.documents) {
-      user.documents = await Promise.all(
-        user.documents.map(async (doc: any) => ({
-          title: (await this.buildLocalized(typeof doc.title === "string" ? doc.title : doc.title instanceof Map ? doc.title.get(preferredLang) || "" : doc.title?.[preferredLang] || "", preferredLang, subscribedLangs)) ?? {},
-          url: String(doc.url),
-          _id: doc._id,
-        }))
-      );
-    }
+    // if (user.documents) {
+    //   user.documents = await Promise.all(
+    //     user.documents.map(async (doc: any) => ({
+    //       title: (await this.buildLocalized(typeof doc.title === "string" ? doc.title : doc.title instanceof Map ? doc.title.get(preferredLang) || "" : doc.title?.[preferredLang] || "", preferredLang, subscribedLangs)) ?? {},
+    //       url: String(doc.url),
+    //       _id: doc._id,
+    //     }))
+    //   );
+    // }
     
     // Finally, update the user record
     console.log("Final user object to be saved:", user);
@@ -417,54 +438,54 @@ export default class UserService {
 
   }
 
-  public async getPreSignURL(userId: string, fileExtension: string, uid: string, title: string, language: string, type: string): Promise<{ uploadURL: string; fileURL: string } | null> {
-    const user = await this.userRepo.findById(userId);
-    if (!user) throw new NotFoundError("User not found");
+  // public async getPreSignURL(userId: string, fileExtension: string, uid: string, title: string, type: string): Promise<{ uploadURL: string; fileURL: string } | null> {
+  //   const user = await this.userRepo.findById(userId);
+  //   if (!user) throw new NotFoundError("User not found");
 
-    if (!user.uid || user.uid !== uid) {
-      throw new AuthorizationError("Unauthorized: Auth0 ID does not match");
-    }
+  //   if (!user.uid || user.uid !== uid) {
+  //     throw new AuthorizationError("Unauthorized: Auth0 ID does not match");
+  //   }
 
-    if (type === "DOCUMENT" && (!user.subscriptionId || user.subscriptionId === null)) {
-        throw new BadRequestError("No subscription plan associated with user for document uploads");
-    }
+  //   if (type === "DOCUMENT" && (!user.subscriptionId || user.subscriptionId === null)) {
+  //       throw new BadRequestError("No subscription plan associated with user for document uploads");
+  //   }
 
-    if (type === "DOCUMENT" && user.subscriptionId) {
-        const subscriptionPlan = await this.subscriptionPlanRepo.findById(user.subscriptionId);
+  //   if (type === "DOCUMENT" && user.subscriptionId) {
+  //       const subscriptionPlan = await this.subscriptionPlanRepo.findById(user.subscriptionId);
 
-        if (!subscriptionPlan) {
-          throw new NotFoundError("Subscription plan not found");
-        }
+  //       if (!subscriptionPlan) {
+  //         throw new NotFoundError("Subscription plan not found");
+  //       }
 
-        const docLimit = subscriptionPlan.document_upload_limit || 0;
-        const existingDocCount = user.documents ? user.documents.length : 0;
+  //       const docLimit = subscriptionPlan.document_upload_limit || 0;
+  //       const existingDocCount = user.documents ? user.documents.length : 0;
 
-        if (existingDocCount >= docLimit) {
-          throw new BadRequestError(`Document upload limit reached. Limit: ${docLimit}`);
-        }
-    }
+  //       if (existingDocCount >= docLimit) {
+  //         throw new BadRequestError(`Document upload limit reached. Limit: ${docLimit}`);
+  //       }
+  //   }
 
-    const res = await getPreSignedURL(userId, fileExtension, type);
-    if (res.status === 0 && res.data) {
-      const { DocumentURL, DocumentKey } = res.data as { DocumentURL: string; DocumentKey: string };
+  //   const res = await getPreSignedURL(userId, fileExtension, type);
+  //   if (res.status === 0 && res.data) {
+  //     const { DocumentURL, DocumentKey } = res.data as { DocumentURL: string; DocumentKey: string };
 
-      if (type === "DOCUMENT") {
-        user.documents = user.documents || [];
-        const newDocuments = { title: (await this.buildLocalized(title, language, user.languageSubscriptionList || ["en"])) || {}, url: DocumentKey };
-        user.documents.push(newDocuments);
-      } else if (type === "PROFILE") {
-        user.profileImageURL = DocumentKey;
-      }
+  //     if (type === "DOCUMENT") {
+  //       user.documents = user.documents || [];
+  //       const newDocuments = { title: (await this.buildLocalized(title, language, user.languageSubscriptionList || ["en"])) || {}, url: DocumentKey };
+  //       user.documents.push(newDocuments);
+  //     } else if (type === "PROFILE") {
+  //       user.profileImageURL = DocumentKey;
+  //     }
       
-      user.updatedAt = new Date();
+  //     user.updatedAt = new Date();
 
-      await this.userRepo.update(userId, user);
+  //     await this.userRepo.update(userId, user);
 
-      return { uploadURL: DocumentURL, fileURL: DocumentKey };
-    } else {
-      throw new Error("Failed to generate pre-signed URL");
-    }
-  }
+  //     return { uploadURL: DocumentURL, fileURL: DocumentKey };
+  //   } else {
+  //     throw new Error("Failed to generate pre-signed URL");
+  //   }
+  // }
 
   public async deleteDocument(userId: string, documentId: string, uid: string, type: string): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
@@ -487,4 +508,68 @@ export default class UserService {
     await this.userRepo.update(userId, user);
     return user;
   }
+
+  public async getPreSignURL( userId: string, fileExtension: string, uid: string, title: Record<string, string>, type: string): Promise<{ uploadURL: string; fileURL: string } | null> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError("User not found");
+
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: Auth0 ID does not match");
+    }
+
+    if (type === "DOCUMENT" && (!user.subscriptionId || user.subscriptionId === null)) {
+      throw new BadRequestError("No subscription plan associated with user for document uploads");
+    }
+
+    if (type === "DOCUMENT" && user.subscriptionId) {
+      const subscriptionPlan = await this.subscriptionPlanRepo.findById(user.subscriptionId);
+      if (!subscriptionPlan) throw new NotFoundError("Subscription plan not found");
+
+      const docLimit = subscriptionPlan.document_upload_limit || 0;
+      const existingDocCount = user.documents ? user.documents.length : 0;
+      if (existingDocCount >= docLimit) {
+        throw new BadRequestError(`Document upload limit reached. Limit: ${docLimit}`);
+      }
+    }
+
+    const res = await getPreSignedURL(userId, fileExtension, type);
+    if (res.status === 0 && res.data) {
+      const { DocumentURL, DocumentKey } = res.data as { DocumentURL: string; DocumentKey: string };
+
+      if (type === "DOCUMENT") {
+        user.documents = user.documents || [];
+
+        // Create new doc with merged titles
+        const newDocuments = {
+          title: {},  // will hold merged langs
+          url: DocumentKey,
+        };
+
+        // Merge if already exists for same file (by url or title)
+        const existingDoc = user.documents.find(doc => doc.url === DocumentKey);
+
+        if (existingDoc) {
+          newDocuments.title = { ...existingDoc.title, ...title }; // merge old + new
+        } else {
+          newDocuments.title = { ...title }; // just take new if none exists
+          user.documents.push(newDocuments);
+        }
+
+        // Replace existing if found, otherwise just push
+        if (existingDoc) {
+          Object.assign(existingDoc, newDocuments);
+        }
+      } else if (type === "PROFILE") {
+        user.profileImageURL = DocumentKey;
+      }
+
+      user.updatedAt = new Date();
+      await this.userRepo.update(userId, user);
+
+      return { uploadURL: DocumentURL, fileURL: DocumentKey };
+    } else {
+      throw new Error("Failed to generate pre-signed URL");
+    }
+  }
+
 }

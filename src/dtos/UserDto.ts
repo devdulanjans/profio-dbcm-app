@@ -30,4 +30,7 @@ export interface UserDto {
   updatedAt: Date;
   isDeleted: boolean;
   languageSubscriptionList?: string[]; // List of language codes
+  lastPaymentDate?: Date;
+  nextPaymentDate?: Date;
+  paymentSubscriptionType?: string; // e.g. "MONTHLY", "YEARLY"
 }

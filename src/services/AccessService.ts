@@ -38,6 +38,31 @@ class AccessService {
 
     return createdUser;
   }
+
+  async deactivateUser(userId: string, uid: string, loggedInUid: string) {
+    if (uid !== loggedInUid) {
+      throw new Error("Unauthorized: UID mismatch");
+    }
+
+    const user = await this.repo.findById(userId);
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.isDeleted) {
+      throw new Error("User is already deactivated");
+    }
+
+    if (user.uid !== uid) {
+      throw new Error("UID does not match the user record");
+    }
+
+    user.isDeleted = true;
+    user.updatedAt = new Date();
+    await this.repo.update(userId, user);
+    return true;
+  }
 }
 
 export default AccessService;

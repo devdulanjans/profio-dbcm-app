@@ -55,3 +55,24 @@ export const getSubscriptionByCode = async (req: Request, res: Response) => {
         res.status(500).json({ status: "Error", message: 'Error fetching subscription', error });
     }
 };
+
+// asign subscriptionplan to user & upate paymentSubscriptionType & payment insert & validate payment with stripe
+export const assignSubscriptionToUser = async (req: Request, res: Response) => {
+    const { userId, subscriptionId, paymentSubscriptionType, amount, currencyCode, paymentId } = req.body;
+    const uid = (req as any).user?.uid;
+
+    if (!uid) {
+        return res.status(400).json({ status: 1, message: "Unauthorized: Missing UID" });
+    }
+
+    if (!userId || !subscriptionId || !paymentSubscriptionType || !amount || !currencyCode || !paymentId) {
+        return res.status(400).json({ status: 1, message: "Bad Request: Missing required fields" });
+    }
+
+    try {
+        const result = await subscriptionPlanService.assignSubscriptionToUser(uid, userId, subscriptionId, paymentSubscriptionType, amount, currencyCode, paymentId);
+        res.json({ status: 0, message: "Subscription assigned successfully", data: result });
+    } catch (error: any) {
+        res.status(500).json({ status: 1, message: error.message || 'Error assigning subscription', error });
+    }
+};

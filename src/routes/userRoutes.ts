@@ -1,14 +1,17 @@
 import { Router } from "express";
 import { getUsers, getUser, updateUser, getUserByUid, checkExistenceSharedUrlName, subscribeLanguage, unsubscribeLanguage, removeProfileImage, getPreSignURL
-    , removeDocument} from "../controllers/userController";
+    , removeDocument, updatePaymentSubscriptionPlan } from "../controllers/userController";
 
 const router = Router();
 
 router.get("/", getUsers);
 router.get("/:id", getUser);
 router.get("/uid/:id", getUserByUid);
-router.put("/:id", updateUser);
 router.get("/shared_url/:shareUrlName", checkExistenceSharedUrlName);
+
+router.put("/:id", updateUser);
+router.put("/payment_subscription/:id", updatePaymentSubscriptionPlan);
+
 router.put("/language/subscribe", subscribeLanguage);
 router.put("/language/unsubscribe", unsubscribeLanguage);
 

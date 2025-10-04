@@ -26,7 +26,9 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   isDeleted: boolean;
-
+  lastPaymentDate?: Date;
+  nextPaymentDate?: Date;
+  paymentSubscriptionType?: string; // e.g. "MONTHLY", "YEARLY", null
 
   name?: ILocalizedField;
   personalAddress?: ILocalizedField;
@@ -34,7 +36,7 @@ export interface IUser extends Document {
   jobTitle?: ILocalizedField;
   companyAddress?: ILocalizedField;
   otherLinks?: { title: ILocalizedField; url: string }[];
-  documents?: { title: ILocalizedField; url: string , _id?: string}[];
+  documents?: { title: ILocalizedField; url: string; _id?: string }[];
 
 }
 
@@ -81,7 +83,10 @@ const userSchema = new Schema<IUser>({
   languageSubscriptionList: { type: [String], required: false, default: [] },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-  isDeleted: { type: Boolean, default: false }
+  isDeleted: { type: Boolean, default: false },
+  lastPaymentDate: { type: Date, required: false, default: null },
+  nextPaymentDate: { type: Date, required: false, default: null },
+  paymentSubscriptionType: { type: String, required: false, default: null },
 });
 
 export default model<IUser>("User", userSchema, "user");

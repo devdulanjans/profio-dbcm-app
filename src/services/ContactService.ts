@@ -8,9 +8,21 @@ import { NotFoundError } from "../errors/NotFoundError";
 export class ContactService {
   private repo = new ContactRepository();
 
-  async saveContact(userId: string, profileId: string, uid: string, templateId: string) {
+  async saveContact(userId: string, profileId: string, uid: string, templateId: string, language: string) {
 
-    await this.authorizeUser(userId, uid);
+    // await this.authorizeUser(userId, uid);
+
+    const user = await UserRepository.findUserByUid(uid);
+
+    if (!user) throw new Error("User not found");
+
+    const loggedInUserId = user.id;
+
+    if (userId !== loggedInUserId) {
+      console.log(`Authorization failed: userId ${userId} does not match loggedInUserId ${loggedInUserId}`);
+      // throw new Error("Unauthorized action");
+      throw new AuthorizationError("Unauthorized action");
+    }
 
     if (userId === profileId) { 
       throw new BadRequestError("Cannot save your own profile as a contact"); 
@@ -19,7 +31,16 @@ export class ContactService {
     const alreadySaved = await this.repo.isSaved(userId, profileId);
     if (alreadySaved) throw new BadRequestError("Contact already saved");
 
-    return await this.repo.create({ user_id: userId, profile_id: profileId, template_id: templateId });
+    return await this.repo.create({ 
+      user_id: userId, 
+      profile_id: profileId, 
+      template_id: templateId, 
+      profile_details: { 
+        name: [{ langCode: language, value: user.name?.[language] || "" }], 
+        email: user.email || "", 
+        phone: user.phoneNumber || ""  
+      } 
+    });
   }
 
   async getContacts(userId: string, uid: string) {
