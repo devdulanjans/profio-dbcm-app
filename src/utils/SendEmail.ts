@@ -3,8 +3,10 @@ import fs from "fs";
 import path from "path";
 
 const mg = mailgun({
-  apiKey: process.env.MAILGUN_API_KEY as string,
-  domain: process.env.MAILGUN_DOMAIN as string,
+  // apiKey: process.env.MAILGUN_API_KEY as string,
+  // domain: process.env.MAILGUN_DOMAIN as string,
+  apiKey: "",
+  domain: "",
 });
 
 function loadTemplate(filename: string, variables: Record<string, string>) {
