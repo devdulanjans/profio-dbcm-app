@@ -19,6 +19,11 @@ export class PaymentController {
       return res.status(400).json({ message: "All fields are required", data: null, status: 1 });
     }
 
+    // check amount is a number
+    if (isNaN(amount)) {
+      return res.status(400).json({ message: "Amount must be a number", data: null, status: 1 });
+    }
+
     try {
       const paymentRecord = await service.createPaymentRecord(uid, userId, amount, currencyCode, paymentId);
 

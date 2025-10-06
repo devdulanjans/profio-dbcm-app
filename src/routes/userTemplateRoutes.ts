@@ -4,9 +4,11 @@ import { getTemplateByUserId, assignTemplateToUser, deleteTemplateFromUser, getU
 const router = Router();
 
 router.get("/:userId", getTemplateByUserId);
+router.get("/:userId/:templateId", getUserAndTemplateByIds);
+
 router.post("/:userId/:templateId", assignTemplateToUser);
 router.delete("/:userId/:templateId", deleteTemplateFromUser);
-router.get("/:userId/:templateId", getUserAndTemplateByIds);
+
 router.post("/share", shareTemplate);
 router.put("/view_count/:userId/:templateId", updateViewCount);
 

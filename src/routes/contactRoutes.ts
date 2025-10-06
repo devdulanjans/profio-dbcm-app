@@ -8,7 +8,7 @@ const controller = new ContactController();
 router.post("/", controller.saveContact);
 
 // Save contact
-router.post("/bidirectional", controller.saveContact);
+// router.post("/bidirectional", controller.saveContact);
 
 // Get all contacts for logged-in user
 router.get("/user/:id", controller.getContacts);
