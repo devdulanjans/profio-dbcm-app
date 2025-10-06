@@ -19,4 +19,6 @@ router.delete("/:id", controller.removeContact);
 // Check if profile is already saved
 router.post("/is_saved", controller.checkSaved);
 
+router.get("/:id", controller.getContactById);
+
 export default router;

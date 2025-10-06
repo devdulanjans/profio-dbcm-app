@@ -280,3 +280,38 @@ export const removeDocument = async (req: Request, res: Response, next: Function
     next(error);
   }
 };
+
+export const updateDocumentTitle = async (req: Request, res: Response, next: Function) => {
+  const uid = (req as any).user?.uid;
+
+  if (!uid) {
+    return res.status(400).json({ message: "UID is required" });
+  }
+
+  const { documentId, title, language, userId } = req.body;
+
+  if (!documentId) {
+    return res.status(400).json({ message: "Document ID is required" });
+  }
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  if (!title) {
+    return res.status(400).json({ message: "Title is required" });
+  }
+
+  if (!language) {
+    return res.status(400).json({ message: "Language is required" });
+  }
+
+  try {
+    const updatedUser = await userService.updateDocumentTitle(userId, documentId, title, language, uid);
+    if (!updatedUser) return res.status(404).json({ message: "Not found" });
+    res.json({ status: 0, message: "Document title updated successfully", data: updatedUser });
+  } catch (error) {
+    log("Error in updateDocumentTitle:", error);
+    next(error);
+  }
+};

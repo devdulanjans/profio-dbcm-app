@@ -4,9 +4,11 @@ import UserRepository from "../repositories/UserRepository";
 import { AuthorizationError } from "../errors/AuthorizationError";
 import { BadRequestError } from "../errors/BadRequestError";
 import { NotFoundError } from "../errors/NotFoundError";
+import { ContactResDto } from "../dtos/ContactResDto";
 
 export class ContactService {
   private repo = new ContactRepository();
+  private userRepo = new UserRepository();
 
   async saveContact(userId: string, profileId: string, uid: string, templateId: string, language: string) {
 
@@ -82,5 +84,73 @@ export class ContactService {
     }
 
     return true;
+  }
+
+  async getContactById(contactId: string, uid: string) {
+    const user = await UserRepository.findUserByUid(uid);
+
+    if (!user) throw new NotFoundError("User not found");
+
+    const loggedInUserId = user.id;
+
+    const contact = await this.repo.findById(contactId);
+
+    if (!contact) throw new NotFoundError("Contact not found");
+
+    if (contact.user_id !== loggedInUserId) throw new AuthorizationError("Unauthorized action");
+
+    const contactUser = await this.userRepo.findById(contact.profile_id);
+
+    if (!contactUser) throw new NotFoundError("Contact user not found");
+
+    if (contactUser.isDeleted){
+
+      return {
+        _id: contact._id,
+        user_id: contact.user_id,
+        profile_id: contact.profile_id,
+        template_id: contact.template_id,
+        saved_at: contact.saved_at,
+        profile_details: contact.profile_details,
+      };
+
+    } else {
+
+      return {
+        _id: contact._id,
+        user_id: contact.user_id,
+        profile_id: contact.profile_id,
+        template_id: contact.template_id,
+        saved_at: contact.saved_at,
+        profile_details: contact.profile_details,
+        user_details: {
+          uid: user.uid,
+          personalAddress: user.personalAddress,
+          personalWebsite: user.personalWebsite,
+          companyName: user.companyName,
+          jobTitle: user.jobTitle,
+          companyEmail: user.companyEmail,
+          companyPhoneNumber: user.companyPhoneNumber,
+          companyAddress: user.companyAddress,
+          companyWebsite: user.companyWebsite,
+          whatsappNumber: user.whatsappNumber,
+          facebookUrl: user.facebookUrl,
+          instagramUrl: user.instagramUrl,
+          linkedInUrl: user.linkedInUrl,
+          tikTokUrl: user.tikTokUrl,
+          youtubeUrl: user.youtubeUrl,
+          otherLinks: user.otherLinks,
+          documents: user.documents,
+          subscriptionId: user.subscriptionId,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          isDeleted: user.isDeleted,
+          languageSubscriptionList: user.languageSubscriptionList,
+          lastPaymentDate: user.lastPaymentDate,
+          nextPaymentDate: user.nextPaymentDate,
+          paymentSubscriptionType: user.paymentSubscriptionType
+        }
+      };
+    }
   }
 }

@@ -102,4 +102,32 @@ export class ContactController {
       next(err);
     }
   }
+
+  async getContactById(req: Request, res: Response, next: Function) {
+    try {
+      const uid = (req as any).user.uid; // Auth0 user ID 
+
+      if (!uid) {
+        return res.status(401).json({ status: "Error", message: "Unauthorized: user.uid not found" });
+      }
+
+      const contactId = req.params.id;
+
+      if (!contactId) {
+        return res.status(400).json({ status: "Error", message: "Bad Request: Missing contactId parameter" });
+      }
+
+      const contact = await service.getContactById(contactId, uid);
+
+      if (!contact) {
+        return res.status(404).json({ status: "Error", message: "Not Found: Contact does not exist" });
+      }
+
+      res.json({ status: 0, message: "Contact retrieved successfully", data: contact });
+
+    } catch (err: any) {
+      log("Error in getContactById:", err);
+      next(err);
+    }
+  }
 }

@@ -572,4 +572,33 @@ export default class UserService {
     }
   }
 
+  public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, language: string, uid: string): Promise<IUser | null> {
+    const user = await this.userRepo.findById(userId);
+    
+    if (!user) throw new NotFoundError("User not found");
+
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: User ID does not match");
+    }
+
+    const document = user.documents?.find(doc => doc._id?.toString() === documentId);
+
+    if (!document) {
+      throw new NotFoundError("Document not found");
+    }
+
+    const subscribedLangs = user.languageSubscriptionList || ["en"];
+
+    for (const lang of Object.keys(title)) {
+      if (!subscribedLangs.includes(lang)) {
+        throw new BadRequestError(`Language ${lang} not subscribed`);
+      }
+      document.title = { ...document.title, ...title }; // merge & overwrite same lang
+    }
+
+    user.updatedAt = new Date();
+    await this.userRepo.update(userId, user);
+    return user;
+  }
+
 }

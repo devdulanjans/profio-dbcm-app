@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getUsers, getUser, updateUser, getUserByUid, checkExistenceSharedUrlName, subscribeLanguage, unsubscribeLanguage, removeProfileImage, getPreSignURL
-    , removeDocument, updatePaymentSubscriptionPlan } from "../controllers/userController";
+    , removeDocument, updatePaymentSubscriptionPlan, updateDocumentTitle } from "../controllers/userController";
 
 const router = Router();
 
@@ -15,10 +15,12 @@ router.put("/payment_subscription/:id", updatePaymentSubscriptionPlan);
 router.put("/language/subscribe", subscribeLanguage);
 router.put("/language/unsubscribe", unsubscribeLanguage);
 
+router.post("/presign_url", getPreSignURL);
+
 router.delete("/:id/profile_image", removeProfileImage);
 router.delete("/document/:userId/:type/:id", removeDocument);
 
-router.post("/presign_url", getPreSignURL);
+router.patch("/document/title", updateDocumentTitle);
 
 
 export default router;
