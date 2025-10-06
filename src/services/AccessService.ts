@@ -34,7 +34,7 @@ class AccessService {
     const payload = {
       email: createdUser.email,
     }
-    await sendWelcomeEmail(email, payload);
+    // await sendWelcomeEmail(email, payload);
 
     return createdUser;
   }
