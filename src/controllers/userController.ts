@@ -55,9 +55,9 @@ export const updateUser = async (req: Request, res: Response, next: Function) =>
 
   try {
 
-    if (req.body.otherLinks) {
-      req.body.otherLinks = JSON.parse(req.body.otherLinks);
-    }
+    // if (req.body.otherLinks) {
+    //   req.body.otherLinks = JSON.parse(req.body.otherLinks);
+    // }
 
     const updatedUser = await userService.updateUser(userId, body);
     if (!updatedUser) return res.status(404).json({ message: "Not found" });
