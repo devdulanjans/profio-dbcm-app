@@ -27,6 +27,10 @@ export default class UserTemplateService {
     // Get template IDs assigned to the user
     const userTemplates = await this.userTemplateRepo.findByUserId(userId);
 
+    if (!userTemplates || userTemplates.length === 0) {
+      return null; // No templates found for the user
+    }
+
     // Get user details
     const userDetails = await this.userRepo.findById(userId);
 
