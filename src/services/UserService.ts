@@ -184,8 +184,35 @@ export default class UserService {
       }
     }
 
+    console.log("Subscribed languages for user:", subscribedLangs);
+
+    const clean = (obj: any) => {
+      if (!obj) return obj;
+
+      // 🧩 Convert Mongoose Map → plain object
+      if (obj instanceof Map) {
+        return Object.fromEntries(obj.entries());
+      }
+
+      // 🧩 Convert subdocument → plain object
+      if (typeof obj.toObject === "function") {
+        obj = obj.toObject();
+      }
+
+      // 🧩 Remove Mongoose internals like "$__"
+      if (typeof obj === "object" && !Array.isArray(obj)) {
+        return Object.fromEntries(Object.entries(obj).filter(([k]) => !k.startsWith("$")));
+      }
+
+      return obj;
+    };
+
+
+
+
     // helpers
     const validateLangObject = (field: any, fieldName: string) => {
+      console.log(`Validating field ${fieldName}:`, field);
       if (typeof field !== "object" || Array.isArray(field)) {
         throw new BadRequestError(`${fieldName} must be an object with language keys`);
       }
@@ -197,19 +224,26 @@ export default class UserService {
       return field;
     };
 
-    const mergeLocalized = (existing: Record<string, string> = {},incoming: Record<string, string>, fieldName: string) => {
-      const validated = validateLangObject(incoming, fieldName);
-      return { ...existing, ...validated }; // merge & overwrite same lang
-    };
+    const mergeLocalized = ( existing: Record<string, string> = {}, incoming: Record<string, string>, fieldName: string) => {
+        
+        console.log(`Merging localized field ${fieldName}:`, { existing, incoming });
+        existing = clean(existing);
+        incoming = clean(incoming);
 
-    // localized fields
+        const validated = validateLangObject(incoming, fieldName);
+
+        console.log(`Merging localized field ${fieldName}:`, { existing, validated });
+
+        return { ...existing, ...validated };
+      };
+
+
     if (data.name) user.name = mergeLocalized(existingUser.name, data.name, "name");
     if (data.personalAddress) user.personalAddress = mergeLocalized(existingUser.personalAddress, data.personalAddress, "personalAddress");
     if (data.companyName) user.companyName = mergeLocalized(existingUser.companyName, data.companyName, "companyName");
     if (data.jobTitle) user.jobTitle = mergeLocalized(existingUser.jobTitle, data.jobTitle, "jobTitle");
     if (data.companyAddress) user.companyAddress = mergeLocalized(existingUser.companyAddress, data.companyAddress, "companyAddress");
 
-    // non-localized fields
     if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
     if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
     if (data.companyEmail) user.companyEmail = data.companyEmail;

@@ -1,0 +1,3 @@
+echo "src/utils/profio-dbcm-app-dev-firebase-adminsdk-fbsvc-bc1eb7d5f4.json" >> .gitignore
+git add .gitignore
+git commit -m "Ignore Firebase admin SDK secret"
