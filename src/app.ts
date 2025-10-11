@@ -101,7 +101,7 @@ app.get("/api/private", checkFirebaseJwt, (req, res) => {
 app.use("/api/users", checkFirebaseJwt, userRoutes);
 app.use("/api/subscriptions", checkFirebaseJwt, subscriptionPlanRoutes);
 app.use("/api/templates", checkFirebaseJwt, templateRoutes);
-app.use("/api/user-templates", userTemplateRoutes);
+app.use("/api/user-templates", checkFirebaseJwt, userTemplateRoutes);
 app.use("/api/contacts", checkFirebaseJwt, contactRoutes);
 app.use("/api/public", publicRoutes);
 app.use("/api/app-global-config", checkFirebaseJwt, appGlobalConfigRoutes);
