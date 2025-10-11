@@ -122,6 +122,8 @@ export default class UserTemplateService {
     if (!template) throw new NotFoundError("Template not found");
 
     console.log(`frontend url: ${process.env.FRONTEND_URL}`);
+    console.log(`template code: ${template.template_code}`);
+    console.log(`template: ${template}`);
 
     const link = `${process.env.FRONTEND_URL}/${language}/${user.shareURLName}/${template.template_code}`;
 
