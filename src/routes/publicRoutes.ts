@@ -4,6 +4,6 @@ import { PublicController } from "../controllers/publicController";
 const router = Router();
 const controller = new PublicController();
 
-router.get("/:shareUrlName/:templateCode/:language", controller.viewTemplate);
+router.get("/:language/:shareUrlName/:templateCode", controller.viewTemplate);
 
 export default router;
