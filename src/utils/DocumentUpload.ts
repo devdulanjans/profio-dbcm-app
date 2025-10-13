@@ -131,8 +131,9 @@ export async function getPreSignedURL(userId: string, fileExtension: string, typ
     const command = new PutObjectCommand({
         Bucket: awsConfig.S3Bucket,
         Key: key,
+        ACL: "public-read", // Grant public access
     });
     const url = await getSignedUrl(client, command, { expiresIn: 60 * 5 }); // 5 minutes
     console.log("Generated pre-signed URL:", url);
     return setResponse("Pre-signed URL generated successfully.", 0, { DocumentURL: url, DocumentKey: fileName });
-}   
+}
