@@ -117,6 +117,7 @@ export async function deleteMedia(userId: string, type: string, imageUrl: string
     }
     return setResponse("File deleted successfully.", 0);
 }
+
 export async function getPreSignedURL(userId: string, fileExtension: string, type: string): Promise<OperationResponse> {
     const awsConfig = getAwsConfig();
     const client = getS3Client(awsConfig);
