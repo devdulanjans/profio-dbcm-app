@@ -606,7 +606,7 @@ export default class UserService {
     }
   }
 
-  public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, language: string, uid: string): Promise<IUser | null> {
+  public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
     
     if (!user) throw new NotFoundError("User not found");
