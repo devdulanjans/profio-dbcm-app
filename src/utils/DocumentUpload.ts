@@ -76,7 +76,8 @@ export async function uploadMedia(userId: string, fileExtension: string, fileBuf
                 Bucket: awsConfig.S3Bucket,
                 Key: key,
                 Body: fileBuffer,
-                ACL: "public-read",
+                ACL: "public-read", // Ensure public-read ACL is set
+                ContentType: `image/${fileExtension}` // Set content type for images
             })
         );
     } catch (err) {

@@ -288,7 +288,7 @@ export const updateDocumentTitle = async (req: Request, res: Response, next: Fun
     return res.status(400).json({ message: "UID is required" });
   }
 
-  const { documentId, title, language, userId } = req.body;
+  const { documentId, title, userId } = req.body;
 
   if (!documentId) {
     return res.status(400).json({ message: "Document ID is required" });
@@ -302,12 +302,8 @@ export const updateDocumentTitle = async (req: Request, res: Response, next: Fun
     return res.status(400).json({ message: "Title is required" });
   }
 
-  if (!language) {
-    return res.status(400).json({ message: "Language is required" });
-  }
-
   try {
-    const updatedUser = await userService.updateDocumentTitle(userId, documentId, title, language, uid);
+    const updatedUser = await userService.updateDocumentTitle(userId, documentId, title, uid);
     if (!updatedUser) return res.status(404).json({ message: "Not found" });
     res.json({ status: 0, message: "Document title updated successfully", data: updatedUser });
   } catch (error) {
