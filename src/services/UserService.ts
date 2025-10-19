@@ -606,37 +606,9 @@ export default class UserService {
     }
   }
 
-  // public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
-  //   const user = await this.userRepo.findById(userId);
-    
-  //   if (!user) throw new NotFoundError("User not found");
-
-  //   if (!user.uid || user.uid !== uid) {
-  //     throw new AuthorizationError("Unauthorized: User ID does not match");
-  //   }
-
-  //   const document = user.documents?.find(doc => doc._id?.toString() === documentId);
-
-  //   if (!document) {
-  //     throw new NotFoundError("Document not found");
-  //   }
-
-  //   const subscribedLangs = user.languageSubscriptionList || ["en"];
-
-  //   for (const lang of Object.keys(title)) {
-  //     if (!subscribedLangs.includes(lang)) {
-  //       throw new BadRequestError(`Language ${lang} not subscribed`);
-  //     }
-  //     document.title = { ...document.title, ...title }; // merge & overwrite same lang
-  //   }
-
-  //   user.updatedAt = new Date();
-  //   await this.userRepo.update(userId, user);
-  //   return user;
-  // }
-
   public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
+    
     if (!user) throw new NotFoundError("User not found");
 
     if (!user.uid || user.uid !== uid) {
@@ -644,27 +616,63 @@ export default class UserService {
     }
 
     const document = user.documents?.find(doc => doc._id?.toString() === documentId);
-    if (!document) throw new NotFoundError("Document not found");
+
+    if (!document) {
+      throw new NotFoundError("Document not found");
+    }
 
     const subscribedLangs = user.languageSubscriptionList || ["en"];
 
-    // Validate all incoming languages first
     for (const lang of Object.keys(title)) {
       if (!subscribedLangs.includes(lang)) {
         throw new BadRequestError(`Language ${lang} not subscribed`);
       }
+
+      // if document title for this lang already exists overwrite else add new
+      if (document.title[lang]) {
+        document.title[lang] = title[lang];
+      } else {
+        document.title[lang] = title[lang];
+      }
+
+      // document.title = { ...document.title, ...title }; // merge & overwrite same lang
     }
-
-    // ✅ Update existing keys and add new ones
-    Object.assign(document.title, title);
-
-    // ✅ Explicitly tell Mongoose that nested field changed
-    (user as any).markModified(`documents`);
-
+    // user.documents = user.documents || [];
     user.updatedAt = new Date();
     await this.userRepo.update(userId, user);
-
     return user;
   }
+
+  // public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
+  //   const user = await this.userRepo.findById(userId);
+  //   if (!user) throw new NotFoundError("User not found");
+
+  //   if (!user.uid || user.uid !== uid) {
+  //     throw new AuthorizationError("Unauthorized: User ID does not match");
+  //   }
+
+  //   const document = user.documents?.find(doc => doc._id?.toString() === documentId);
+  //   if (!document) throw new NotFoundError("Document not found");
+
+  //   const subscribedLangs = user.languageSubscriptionList || ["en"];
+
+  //   // Validate all incoming languages first
+  //   for (const lang of Object.keys(title)) {
+  //     if (!subscribedLangs.includes(lang)) {
+  //       throw new BadRequestError(`Language ${lang} not subscribed`);
+  //     }
+  //   }
+
+  //   // ✅ Update existing keys and add new ones
+  //   Object.assign(document.title, title);
+
+  //   // ✅ Explicitly tell Mongoose that nested field changed
+  //   (user as any).markModified(`documents`);
+
+  //   user.updatedAt = new Date();
+  //   await this.userRepo.update(userId, user);
+
+  //   return user;
+  // }
 
 }
