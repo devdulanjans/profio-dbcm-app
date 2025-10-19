@@ -48,6 +48,7 @@ export default class UserTemplateService {
       const template = templateDoc?.toObject ? templateDoc.toObject() : templateDoc;
 
       return {
+        userTemplateId: ut._id,
         ...ut.toObject?.() || ut,
         ...template,
       };
