@@ -606,47 +606,53 @@ export default class UserService {
     }
   }
 
-  public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
-    const user = await this.userRepo.findById(userId);
-    
-    if (!user) throw new NotFoundError("User not found");
+  public async updateDocumentTitle(
+  userId: string,
+  documentId: string,
+  title: Record<string, string>,
+  uid: string
+): Promise<IUser | null> {
+  const user = await this.userRepo.findById(userId);
+  
+  if (!user) throw new NotFoundError("User not found");
 
-    if (!user.uid || user.uid !== uid) {
-      throw new AuthorizationError("Unauthorized: User ID does not match");
-    }
-
-    const document = user.documents?.find(doc => doc._id?.toString() === documentId);
-
-    if (!document) {
-      throw new NotFoundError("Document not found");
-    }
-
-    const subscribedLangs = user.languageSubscriptionList || ["en"];
-    user.documents = user.documents || [];
-
-    for (const lang of Object.keys(title)) {
-      if (!subscribedLangs.includes(lang)) {
-        throw new BadRequestError(`Language ${lang} not subscribed`);
-      }
-
-      console.log(`Updating document title for lang ${lang}:`, title[lang]);
-      console.log(`Current document title for lang ${lang}:`, document.title[lang]);
-      // if document title for this lang already exists overwrite else add new and set to user and update user
-      if (document.title[lang]) {
-        console.log(`Overwriting existing title for lang ${lang}`);
-        document.title[lang] = title[lang];
-      } else {
-        console.log(`Adding new title for lang ${lang}:`, title[lang]);
-        document.title[lang] = title[lang];
-      }
-      user.documents.push(document);
-    }
-
-    console.log("User documents after title update:", user.documents);
-    user.updatedAt = new Date();
-    await this.userRepo.update(userId, user);
-    return user;
+  if (!user.uid || user.uid !== uid) {
+    throw new AuthorizationError("Unauthorized: User ID does not match");
   }
+
+  const document = user.documents?.find(doc => doc._id?.toString() === documentId);
+
+  if (!document) {
+    throw new NotFoundError("Document not found");
+  }
+
+  const subscribedLangs = user.languageSubscriptionList || ["en"];
+  user.documents = user.documents || [];
+
+  for (const lang of Object.keys(title)) {
+    if (!subscribedLangs.includes(lang)) {
+      throw new BadRequestError(`Language ${lang} not subscribed`);
+    }
+
+    console.log(`Updating document title for lang ${lang}:`, title[lang]);
+    console.log(`Current document title for lang ${lang}:`, document.title[lang]);
+
+    // Overwrite existing or add new title
+    document.title[lang] = title[lang];
+  }
+
+  // No duplicates: push only if the document is not already in user's documents
+  if (!user.documents.find(doc => doc._id?.toString() === documentId)) {
+    user.documents.push(document);
+  }
+
+  console.log("User documents after title update:", user.documents);
+
+  user.updatedAt = new Date();
+  await this.userRepo.update(userId, user);
+  return user;
+}
+
 
   // public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
   //   const user = await this.userRepo.findById(userId);
