@@ -628,6 +628,8 @@ export default class UserService {
         throw new BadRequestError(`Language ${lang} not subscribed`);
       }
 
+      console.log(`Updating document title for lang ${lang}:`, title[lang]);
+      console.log(`Current document title for lang ${lang}:`, document.title[lang]);
       // if document title for this lang already exists overwrite else add new
       if (document.title[lang]) {
         document.title[lang] = title[lang];
