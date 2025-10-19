@@ -612,46 +612,60 @@ export default class UserService {
   title: Record<string, string>,
   uid: string
 ): Promise<IUser | null> {
+  // 1. Find the user
   const user = await this.userRepo.findById(userId);
-  
   if (!user) throw new NotFoundError("User not found");
 
+  // 2. Authorization check
   if (!user.uid || user.uid !== uid) {
     throw new AuthorizationError("Unauthorized: User ID does not match");
   }
 
+  // 3. Find the document to update
   const document = user.documents?.find(doc => doc._id?.toString() === documentId);
-
-  if (!document) {
-    throw new NotFoundError("Document not found");
-  }
+  if (!document) throw new NotFoundError("Document not found");
 
   const subscribedLangs = user.languageSubscriptionList || ["en"];
   user.documents = user.documents || [];
 
+  console.log("Current document title before update:", document.title);
+  console.log("New title to update:", title);
+  console.log("User's subscribed languages:", subscribedLangs);
+
+  // 4. Convert document.title Map to plain object if needed
+  let titleObj: ILocalizedField = {};
+  if (document.title instanceof Map) {
+    titleObj = Object.fromEntries(document.title.entries());
+  } else {
+    titleObj = { ...document.title }; // already an object
+  }
+
+  // 5. Update or add new languages
   for (const lang of Object.keys(title)) {
     if (!subscribedLangs.includes(lang)) {
       throw new BadRequestError(`Language ${lang} not subscribed`);
     }
 
-    console.log(`Updating document title for lang ${lang}:`, title[lang]);
-    console.log(`Current document title for lang ${lang}:`, document.title[lang]);
+    const currentTitle = titleObj[lang];
+    console.log(`Current document title for ${lang}:`, currentTitle);
 
-    // Overwrite existing or add new title
-    document.title[lang] = title[lang];
+    // Update/add language
+    titleObj[lang] = title[lang];
+    console.log(`Updated/added language ${lang}:`, titleObj[lang]);
   }
 
-  // No duplicates: push only if the document is not already in user's documents
-  if (!user.documents.find(doc => doc._id?.toString() === documentId)) {
-    user.documents.push(document);
-  }
+  // 6. Assign the updated plain object back to document.title
+  document.title = titleObj;
 
-  console.log("User documents after title update:", user.documents);
+  console.log("Updated document title object:", document.title);
 
+  // 7. Update updatedAt and save
   user.updatedAt = new Date();
   await this.userRepo.update(userId, user);
+
   return user;
 }
+
 
 
   // public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
