@@ -622,6 +622,7 @@ export default class UserService {
     }
 
     const subscribedLangs = user.languageSubscriptionList || ["en"];
+    user.documents = user.documents || [];
 
     for (const lang of Object.keys(title)) {
       if (!subscribedLangs.includes(lang)) {
@@ -630,16 +631,18 @@ export default class UserService {
 
       console.log(`Updating document title for lang ${lang}:`, title[lang]);
       console.log(`Current document title for lang ${lang}:`, document.title[lang]);
-      // if document title for this lang already exists overwrite else add new
+      // if document title for this lang already exists overwrite else add new and set to user and update user
       if (document.title[lang]) {
+        console.log(`Overwriting existing title for lang ${lang}`);
         document.title[lang] = title[lang];
       } else {
+        console.log(`Adding new title for lang ${lang}:`, title[lang]);
         document.title[lang] = title[lang];
       }
-
-      // document.title = { ...document.title, ...title }; // merge & overwrite same lang
+      user.documents.push(document);
     }
-    // user.documents = user.documents || [];
+
+    console.log("User documents after title update:", user.documents);
     user.updatedAt = new Date();
     await this.userRepo.update(userId, user);
     return user;
