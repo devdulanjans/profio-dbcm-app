@@ -43,14 +43,16 @@ export default class UserTemplateService {
 
     // Merge user-template + template details (flattened)
     const templateDetails = await Promise.all(
-      userTemplates.map(async (ut: any) => {
-        const template = await this.templateRepo.findById(ut.template_id);
-        return {
-          ...ut,       // user-template details
-          ...template  // template details flattened
-        };
-      })
-    );
+    userTemplates.map(async (ut: any) => {
+      const templateDoc = await this.templateRepo.findById(ut.template_id);
+      const template = templateDoc?.toObject ? templateDoc.toObject() : templateDoc;
+
+      return {
+        ...ut.toObject?.() || ut,
+        ...template,
+      };
+    })
+  );
 
     return {
       user: userDetails,
