@@ -1,11 +1,15 @@
 import AppGlobalConfigRepo from "../repositories/AppGlobalConfigRepository";
 import UserRepository from "../repositories/UserRepository";
 import SubscriptionRepository from "../repositories/SubscriptionPlanRepository";
+import UserTemplateRepository from "../repositories/UserTemplateRepository";
 import { UserDto } from "../dtos/UserDto"; // Adjust the path as needed
 import { sendWelcomeEmail } from "../utils/SendEmail"; // Adjust the path as needed
+import TemplateRepository from "../repositories/TemplateRepository";
 
 class AccessService {
   private repo = new UserRepository();
+  private userTemplateRepo = new UserTemplateRepository();
+  private templateRepo = new TemplateRepository();
 
   async signUp( uid : string, email: string) {
     // check existance
@@ -30,6 +34,17 @@ class AccessService {
 
     const userToCreate: UserDto = { uid: uid, email: email, isDeleted: false, createdAt: new Date(), updatedAt: new Date(), subscriptionId: subscriptionId, languageSubscriptionList: ["en"] };
     const createdUser = await UserRepository.create(userToCreate);
+
+    if (!createdUser) {
+      throw new Error("Failed to create user");
+    }
+
+    const defaultTemplate = await this.templateRepo.findByTemplateCode("DEFAULT");
+
+    if (defaultTemplate) {
+      const result = await this.userTemplateRepo.assignTemplateToUser(createdUser._id.toString(), defaultTemplate._id.toString())
+      console.log("Assigned default template to new user:", result);
+    }
 
     const payload = {
       email: createdUser.email,
