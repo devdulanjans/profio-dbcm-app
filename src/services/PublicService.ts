@@ -44,6 +44,11 @@ export class PublicService {
             console.log("userField is a plain object:", userField);
             value = userField[language] ?? ""; // plain object
           } else {
+            const baseUrl = "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/"+user._id.toString()+"/PROFILE";
+            // if field is profileImageURL need to add base URL
+            if (key === "profileImageURL" && typeof userField === "string") {
+              value = `${process.env.BASE_URL}/${userField}`;
+            }
             // Simple string field
             value = userField;
           }
