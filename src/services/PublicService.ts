@@ -48,9 +48,9 @@ export class PublicService {
             // if field is profileImageURL need to add base URL
             if (key === "profileImageURL" && typeof userField === "string") {
               value = `${baseUrl}/${userField}`;
+            }else{
+              value = userField; // Simple string field
             }
-            // Simple string field
-            value = userField;
           }
         }
 
