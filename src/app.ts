@@ -109,29 +109,35 @@ app.use("/api/access", checkFirebaseJwt, accessRoutes);
 app.use("/api/payments", checkFirebaseJwt, paymentRoutes);
 
 // Custom error handler for JWT
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // console.error("Error handler caught an error:", err);
-  if (err.name === "UnauthorizedError") {
-    if (err.message === "No authorization token was found") {
-      return res.status(401).json({ message: "Token missing from request" });
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    // console.error("Error handler caught an error:", err);
+    if (err.name === "UnauthorizedError") {
+      if (err.message === "No authorization token was found") {
+        return res.status(401).json({ message: "Token missing from request" });
+      }
+      return res.status(401).json({ message: "Invalid token" });
     }
-    return res.status(401).json({ message: "Invalid token" });
-  }
-  if (err.name === "AuthorizationError") {
-    return res.status(403).json({ message: err.message }); // Forbidden
-  }
+    if (err.name === "AuthorizationError") {
+      return res.status(403).json({ message: err.message }); // Forbidden
+    }
 
-  if (err.name === "BadRequestError") {
-    return res.status(400).json({ message: err.message }); // Bad Request
+    if (err.name === "BadRequestError") {
+      return res.status(400).json({ message: err.message }); // Bad Request
+    }
+
+    if (err.name === "NotFoundError") {
+      return res.status(404).json({ message: err.message }); // Not Found
+    }
+
+    // fallback
+    res.status(500).json({ message: "Internal Server Error" });
   }
-
-  if (err.name === "NotFoundError") {
-    return res.status(404).json({ message: err.message }); // Not Found
-  }
-
-  // fallback
-  res.status(500).json({ message: "Internal Server Error" });
-});
-
+);
 
 export default app;
