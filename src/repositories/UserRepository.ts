@@ -17,6 +17,10 @@ export default class UserRepository {
     return User.findOne({ uid });
   }
 
+  public async findUserByUid(uid: string) {
+    return User.findOne({ uid });
+  }
+
   public async findUserByEmailOrUid(email: string, uid: string) {
     return User.findOne({ $or: [{ email }, { uid }] });
   }
@@ -25,9 +29,13 @@ export default class UserRepository {
     return User.findOne({ shareURLName: shareUrlName });
   }
 
-  public async getSubscriptionIdByUserId(userId: string): Promise<string | null> {
-    const user = await User.findById(userId).select('subscriptionId');
-    return user && user.subscriptionId !== undefined ? user.subscriptionId : null;
+  public async getSubscriptionIdByUserId(
+    userId: string
+  ): Promise<string | null> {
+    const user = await User.findById(userId).select("subscriptionId");
+    return user && user.subscriptionId !== undefined
+      ? user.subscriptionId
+      : null;
   }
 
   public static async create(data: UserDto): Promise<IUser> {
@@ -35,12 +43,20 @@ export default class UserRepository {
     return user.save();
   }
 
-  public async update(id: string, data: Partial<IUser>): Promise<IUser | null>{
+  public async update(id: string, data: Partial<IUser>): Promise<IUser | null> {
     return User.findByIdAndUpdate(id, data);
   }
 
-  public async updatePaymentSubscriptionDetails(id: string, lastPaymentDate: Date, nextPaymentDate: Date): Promise<IUser | null> {
-    return User.findByIdAndUpdate(id, { lastPaymentDate, nextPaymentDate }, { new: true });
+  public async updatePaymentSubscriptionDetails(
+    id: string,
+    lastPaymentDate: Date,
+    nextPaymentDate: Date
+  ): Promise<IUser | null> {
+    return User.findByIdAndUpdate(
+      id,
+      { lastPaymentDate, nextPaymentDate },
+      { new: true }
+    );
   }
 
   public async delete(id: string) {

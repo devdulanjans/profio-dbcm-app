@@ -18,7 +18,7 @@ export default class TemplateService {
     loggedInUid: string,
     language: string
   ) {
-    const user = await this.userRepo.findById(loggedInUid);
+    const user = await this.userRepo.findUserByUid(loggedInUid);
     if (!user) throw new NotFoundError("User not found");
 
     const templates = await this.templateRepo.findAll();
@@ -69,7 +69,7 @@ export default class TemplateService {
       console.log("Filled HTML:", html);
       template.html_content = html;
     }
-    return;
+    return templates;
   }
 
   public async getTemplateById(id: string) {
