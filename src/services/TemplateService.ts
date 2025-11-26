@@ -21,6 +21,13 @@ export default class TemplateService {
     const user = await this.userRepo.findUserByUid(loggedInUid);
     if (!user) throw new NotFoundError("User not found");
 
+    if (
+      !user.languageSubscriptionList ||
+      !user.languageSubscriptionList.includes(language)
+    ) {
+      throw new NotFoundError("Language not subscribed");
+    }
+
     const templates = await this.templateRepo.findAll();
     for (const template of templates) {
       // Start with template HTML
