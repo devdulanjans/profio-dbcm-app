@@ -6,7 +6,7 @@ import { IUser } from "../models/User";
 
 export default class UserRepository {
   public async findAll() {
-    return User.find().lean();
+    return User.find({ isDeleted: false }).lean();
   }
 
   public async findById(id: string) {

@@ -10,7 +10,11 @@ import AppGlobalConfig from "../models/AppGlobalConfig";
 import AppGlobalConfigRepository from "../repositories/AppGlobalConfigRepository";
 import { BadRequestError } from "../errors/BadRequestError";
 import SubscriptionPlanRepository from "../repositories/SubscriptionPlanRepository";
-import { uploadMedia, deleteMedia, getPreSignedURL } from "../utils/DocumentUpload";
+import {
+  uploadMedia,
+  deleteMedia,
+  getPreSignedURL,
+} from "../utils/DocumentUpload";
 // Add this import if ILocalizedField is defined elsewhere, e.g. in models/User
 import { ILocalizedField } from "../models/User";
 import { get } from "http";
@@ -61,7 +65,10 @@ export default class UserService {
   //   return translations;
   // }
 
-  private buildLocalizedWithout(translations: Record<string, string> | Map<string, string> | undefined, inputLang: string): Record<string, string> | undefined {
+  private buildLocalizedWithout(
+    translations: Record<string, string> | Map<string, string> | undefined,
+    inputLang: string
+  ): Record<string, string> | undefined {
     if (!translations) return undefined;
 
     // Handle Map type (e.g., Mongoose Map)
@@ -81,7 +88,6 @@ export default class UserService {
     // console.log(`Removed language ${inputLang} from object, remaining translations:`, rest);
     return rest;
   }
-
 
   // public async updateUser(id: string, data: Partial<UserCreateDto>) {
   //   const inputLang = data.language || "en";
@@ -115,7 +121,6 @@ export default class UserService {
   //     }
   //     user.shareURLName = sharedURLName;
   //   }
-    
 
   //   if (data.name) user.name = await this.buildLocalized(data.name, inputLang, subscribedLangs);
   //   if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
@@ -165,7 +170,9 @@ export default class UserService {
           : "";
 
       if (sharedURLName) {
-        const userWithSameShareURL = await this.userRepo.findByShareUrlName(sharedURLName);
+        const userWithSameShareURL = await this.userRepo.findByShareUrlName(
+          sharedURLName
+        );
 
         if (userWithSameShareURL) {
           const now = new Date();
@@ -201,20 +208,21 @@ export default class UserService {
 
       // 🧩 Remove Mongoose internals like "$__"
       if (typeof obj === "object" && !Array.isArray(obj)) {
-        return Object.fromEntries(Object.entries(obj).filter(([k]) => !k.startsWith("$")));
+        return Object.fromEntries(
+          Object.entries(obj).filter(([k]) => !k.startsWith("$"))
+        );
       }
 
       return obj;
     };
 
-
-
-
     // helpers
     const validateLangObject = (field: any, fieldName: string) => {
       console.log(`Validating field ${fieldName}:`, field);
       if (typeof field !== "object" || Array.isArray(field)) {
-        throw new BadRequestError(`${fieldName} must be an object with language keys`);
+        throw new BadRequestError(
+          `${fieldName} must be an object with language keys`
+        );
       }
       for (const lang of Object.keys(field)) {
         if (!subscribedLangs.includes(lang)) {
@@ -224,30 +232,60 @@ export default class UserService {
       return field;
     };
 
-    const mergeLocalized = ( existing: Record<string, string> = {}, incoming: Record<string, string>, fieldName: string) => {
-        
-        console.log(`Merging localized field ${fieldName}:`, { existing, incoming });
-        existing = clean(existing);
-        incoming = clean(incoming);
+    const mergeLocalized = (
+      existing: Record<string, string> = {},
+      incoming: Record<string, string>,
+      fieldName: string
+    ) => {
+      console.log(`Merging localized field ${fieldName}:`, {
+        existing,
+        incoming,
+      });
+      existing = clean(existing);
+      incoming = clean(incoming);
 
-        const validated = validateLangObject(incoming, fieldName);
+      const validated = validateLangObject(incoming, fieldName);
 
-        console.log(`Merging localized field ${fieldName}:`, { existing, validated });
+      console.log(`Merging localized field ${fieldName}:`, {
+        existing,
+        validated,
+      });
 
-        return { ...existing, ...validated };
-      };
+      return { ...existing, ...validated };
+    };
 
-
-    if (data.name) user.name = mergeLocalized(existingUser.name, data.name, "name");
-    if (data.personalAddress) user.personalAddress = mergeLocalized(existingUser.personalAddress, data.personalAddress, "personalAddress");
-    if (data.companyName) user.companyName = mergeLocalized(existingUser.companyName, data.companyName, "companyName");
-    if (data.jobTitle) user.jobTitle = mergeLocalized(existingUser.jobTitle, data.jobTitle, "jobTitle");
-    if (data.companyAddress) user.companyAddress = mergeLocalized(existingUser.companyAddress, data.companyAddress, "companyAddress");
+    if (data.name)
+      user.name = mergeLocalized(existingUser.name, data.name, "name");
+    if (data.personalAddress)
+      user.personalAddress = mergeLocalized(
+        existingUser.personalAddress,
+        data.personalAddress,
+        "personalAddress"
+      );
+    if (data.companyName)
+      user.companyName = mergeLocalized(
+        existingUser.companyName,
+        data.companyName,
+        "companyName"
+      );
+    if (data.jobTitle)
+      user.jobTitle = mergeLocalized(
+        existingUser.jobTitle,
+        data.jobTitle,
+        "jobTitle"
+      );
+    if (data.companyAddress)
+      user.companyAddress = mergeLocalized(
+        existingUser.companyAddress,
+        data.companyAddress,
+        "companyAddress"
+      );
 
     if (data.phoneNumber) user.phoneNumber = data.phoneNumber;
     if (data.personalWebsite) user.personalWebsite = data.personalWebsite;
     if (data.companyEmail) user.companyEmail = data.companyEmail;
-    if (data.companyPhoneNumber) user.companyPhoneNumber = data.companyPhoneNumber;
+    if (data.companyPhoneNumber)
+      user.companyPhoneNumber = data.companyPhoneNumber;
     if (data.companyWebsite) user.companyWebsite = data.companyWebsite;
     if (data.whatsappNumber) user.whatsappNumber = data.whatsappNumber;
     if (data.facebookUrl) user.facebookUrl = data.facebookUrl;
@@ -258,7 +296,11 @@ export default class UserService {
 
     if (data.otherLinks) {
       user.otherLinks = data.otherLinks.map((link: any, idx: number) => ({
-        title: mergeLocalized(existingUser.otherLinks?.[idx]?.title, link.title, `otherLinks[${idx}].title`),
+        title: mergeLocalized(
+          existingUser.otherLinks?.[idx]?.title,
+          link.title,
+          `otherLinks[${idx}].title`
+        ),
         url: String(link.url),
       }));
     }
@@ -266,7 +308,11 @@ export default class UserService {
     return this.userRepo.update(id, user);
   }
 
-  public async updatePaymentSubscriptionPlan(userId: string, paymentSubscriptionType: string, uid: string): Promise<IUser | null> {
+  public async updatePaymentSubscriptionPlan(
+    userId: string,
+    paymentSubscriptionType: string,
+    uid: string
+  ): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
 
     if (!user) throw new NotFoundError("User not found");
@@ -275,12 +321,17 @@ export default class UserService {
       throw new AuthorizationError("Unauthorized: User ID does not match");
     }
 
-    if (paymentSubscriptionType !== "MONTHLY" && paymentSubscriptionType !== "YEARLY") {
+    if (
+      paymentSubscriptionType !== "MONTHLY" &&
+      paymentSubscriptionType !== "YEARLY"
+    ) {
       throw new BadRequestError("Invalid payment subscription type");
     }
 
     if (user.paymentSubscriptionType === paymentSubscriptionType) {
-      throw new BadRequestError(`User already has ${paymentSubscriptionType} subscription`);
+      throw new BadRequestError(
+        `User already has ${paymentSubscriptionType} subscription`
+      );
     }
 
     user.paymentSubscriptionType = paymentSubscriptionType;
@@ -299,7 +350,11 @@ export default class UserService {
   //   return `${text}_${targetLang}`; // mock translation
   // }
 
-  public async subscribeLanguage(userId: string, language: string, uid: string): Promise<IUser | null> {
+  public async subscribeLanguage(
+    userId: string,
+    language: string,
+    uid: string
+  ): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
@@ -308,9 +363,13 @@ export default class UserService {
     }
 
     const appConfig = await this.appGlobalConfigRepo.findAll();
-    const supportedLanguages = appConfig.length > 0 ? appConfig[0].languages || ["en"] : ["en"];
+    const supportedLanguages =
+      appConfig.length > 0 ? appConfig[0].languages || ["en"] : ["en"];
 
-    console.log("Supported languages from AppGlobalConfig:", supportedLanguages);
+    console.log(
+      "Supported languages from AppGlobalConfig:",
+      supportedLanguages
+    );
     console.log("Requested language to subscribe:", language);
 
     if (!supportedLanguages.includes(language)) {
@@ -325,15 +384,21 @@ export default class UserService {
       throw new BadRequestError("No subscription plan associated with user");
     }
 
-    const subscriptionPlan = await this.subscriptionPlanRepo.findById(subscriptionPlanId);
+    const subscriptionPlan = await this.subscriptionPlanRepo.findById(
+      subscriptionPlanId
+    );
     if (!subscriptionPlan) {
       throw new NotFoundError("Subscription plan not found");
     }
 
     const maxLanguages = subscriptionPlan.language_limit || 0;
 
-    console.log(`User's current subscribed languages: ${user.languageSubscriptionList}`);
-    console.log(`User's subscription plan allows max ${maxLanguages} languages`);
+    console.log(
+      `User's current subscribed languages: ${user.languageSubscriptionList}`
+    );
+    console.log(
+      `User's subscription plan allows max ${maxLanguages} languages`
+    );
 
     if (user.languageSubscriptionList.length >= maxLanguages) {
       throw new BadRequestError("Language subscription limit reached");
@@ -378,14 +443,18 @@ export default class UserService {
     //     }))
     //   );
     // }
-    
+
     // Finally, update the user record
     console.log("Final user object to be saved:", user);
     await this.userRepo.update(userId, user);
     return user;
   }
 
-  public async unsubscribeLanguage(userId: string, language: string, uid: string): Promise<IUser | null> {
+  public async unsubscribeLanguage(
+    userId: string,
+    language: string,
+    uid: string
+  ): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
@@ -399,12 +468,16 @@ export default class UserService {
       throw new BadRequestError("Language not subscribed");
     }
 
-    user.languageSubscriptionList = user.languageSubscriptionList.filter(lang => lang !== language);
+    user.languageSubscriptionList = user.languageSubscriptionList.filter(
+      (lang) => lang !== language
+    );
 
     const subscribedLangs = user.languageSubscriptionList;
 
     if (subscribedLangs.length === 0) {
-      console.log("No languages left after unsubscription, clearing localized fields");
+      console.log(
+        "No languages left after unsubscription, clearing localized fields"
+      );
 
       user.name = {};
       user.personalAddress = {};
@@ -412,24 +485,36 @@ export default class UserService {
       user.jobTitle = {};
       user.companyAddress = {};
       if (user.otherLinks) {
-        user.otherLinks = user.otherLinks.map((link: any) => ({ ...link, title: {} }));
+        user.otherLinks = user.otherLinks.map((link: any) => ({
+          ...link,
+          title: {},
+        }));
       }
       if (user.documents) {
-        user.documents = user.documents.map((doc: any) => ({ ...doc, title: {} }));
+        user.documents = user.documents.map((doc: any) => ({
+          ...doc,
+          title: {},
+        }));
       }
     } else {
       console.log("Languages still subscribed:", subscribedLangs);
 
       user.name = this.buildLocalizedWithout(user.name, language);
-      user.personalAddress = this.buildLocalizedWithout(user.personalAddress, language);
+      user.personalAddress = this.buildLocalizedWithout(
+        user.personalAddress,
+        language
+      );
       user.companyName = this.buildLocalizedWithout(user.companyName, language);
       user.jobTitle = this.buildLocalizedWithout(user.jobTitle, language);
-      user.companyAddress = this.buildLocalizedWithout(user.companyAddress, language);
+      user.companyAddress = this.buildLocalizedWithout(
+        user.companyAddress,
+        language
+      );
 
       if (user.otherLinks) {
         user.otherLinks = await Promise.all(
           user.otherLinks.map(async (link: any) => ({
-            title: (this.buildLocalizedWithout(link.title, language)) ?? {},
+            title: this.buildLocalizedWithout(link.title, language) ?? {},
             url: String(link.url),
           }))
         );
@@ -438,7 +523,7 @@ export default class UserService {
       if (user.documents) {
         user.documents = await Promise.all(
           user.documents.map(async (doc: any) => ({
-            title: (this.buildLocalizedWithout(doc.title, language)) ?? {},
+            title: this.buildLocalizedWithout(doc.title, language) ?? {},
             url: String(doc.url),
             _id: doc._id,
           }))
@@ -453,7 +538,10 @@ export default class UserService {
     return user;
   }
 
-  public async removeProfileImage(userId: string, uid: string): Promise<IUser | null> {
+  public async removeProfileImage(
+    userId: string,
+    uid: string
+  ): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
 
     if (!user) throw new NotFoundError("User not found");
@@ -469,7 +557,6 @@ export default class UserService {
 
     await this.userRepo.update(userId, user);
     return user;
-
   }
 
   // public async getPreSignURL(userId: string, fileExtension: string, uid: string, title: string, type: string): Promise<{ uploadURL: string; fileURL: string } | null> {
@@ -510,7 +597,7 @@ export default class UserService {
   //     } else if (type === "PROFILE") {
   //       user.profileImageURL = DocumentKey;
   //     }
-      
+
   //     user.updatedAt = new Date();
 
   //     await this.userRepo.update(userId, user);
@@ -521,7 +608,12 @@ export default class UserService {
   //   }
   // }
 
-  public async deleteDocument(userId: string, documentId: string, uid: string, type: string): Promise<IUser | null> {
+  public async deleteDocument(
+    userId: string,
+    documentId: string,
+    uid: string,
+    type: string
+  ): Promise<IUser | null> {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
@@ -532,18 +624,27 @@ export default class UserService {
     console.log("User documents before deletion:", user.documents);
     console.log("Document ID to delete:", documentId);
 
-    const document = user.documents?.find(doc => doc._id?.toString() === documentId);
+    const document = user.documents?.find(
+      (doc) => doc._id?.toString() === documentId
+    );
     if (!document) {
       throw new NotFoundError("Document not found");
     }
-    user.documents = user.documents?.filter(doc => doc._id?.toString() !== documentId) || [];
+    user.documents =
+      user.documents?.filter((doc) => doc._id?.toString() !== documentId) || [];
     user.updatedAt = new Date();
     await deleteMedia(userId, type, document.url);
     await this.userRepo.update(userId, user);
     return user;
   }
 
-  public async getPreSignURL( userId: string, fileExtension: string, uid: string, title: Record<string, string>, type: string): Promise<{ uploadURL: string; fileURL: string } | null> {
+  public async getPreSignURL(
+    userId: string,
+    fileExtension: string,
+    uid: string,
+    title: Record<string, string>,
+    type: string
+  ): Promise<{ uploadURL: string; fileURL: string } | null> {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError("User not found");
 
@@ -551,36 +652,51 @@ export default class UserService {
       throw new AuthorizationError("Unauthorized: Auth0 ID does not match");
     }
 
-    if (type === "DOCUMENT" && (!user.subscriptionId || user.subscriptionId === null)) {
-      throw new BadRequestError("No subscription plan associated with user for document uploads");
+    if (
+      type === "DOCUMENT" &&
+      (!user.subscriptionId || user.subscriptionId === null)
+    ) {
+      throw new BadRequestError(
+        "No subscription plan associated with user for document uploads"
+      );
     }
 
     if (type === "DOCUMENT" && user.subscriptionId) {
-      const subscriptionPlan = await this.subscriptionPlanRepo.findById(user.subscriptionId);
-      if (!subscriptionPlan) throw new NotFoundError("Subscription plan not found");
+      const subscriptionPlan = await this.subscriptionPlanRepo.findById(
+        user.subscriptionId
+      );
+      if (!subscriptionPlan)
+        throw new NotFoundError("Subscription plan not found");
 
       const docLimit = subscriptionPlan.document_upload_limit || 0;
       const existingDocCount = user.documents ? user.documents.length : 0;
       if (existingDocCount >= docLimit) {
-        throw new BadRequestError(`Document upload limit reached. Limit: ${docLimit}`);
+        throw new BadRequestError(
+          `Document upload limit reached. Limit: ${docLimit}`
+        );
       }
     }
 
     const res = await getPreSignedURL(userId, fileExtension, type);
     if (res.status === 0 && res.data) {
-      const { DocumentURL, DocumentKey } = res.data as { DocumentURL: string; DocumentKey: string };
+      const { DocumentURL, DocumentKey } = res.data as {
+        DocumentURL: string;
+        DocumentKey: string;
+      };
 
       if (type === "DOCUMENT") {
         user.documents = user.documents || [];
 
         // Create new doc with merged titles
         const newDocuments = {
-          title: {},  // will hold merged langs
+          title: {}, // will hold merged langs
           url: DocumentKey,
         };
 
         // Merge if already exists for same file (by url or title)
-        const existingDoc = user.documents.find(doc => doc.url === DocumentKey);
+        const existingDoc = user.documents.find(
+          (doc) => doc.url === DocumentKey
+        );
 
         if (existingDoc) {
           newDocuments.title = { ...existingDoc.title, ...title }; // merge old + new
@@ -607,66 +723,66 @@ export default class UserService {
   }
 
   public async updateDocumentTitle(
-  userId: string,
-  documentId: string,
-  title: Record<string, string>,
-  uid: string
-): Promise<IUser | null> {
-  // 1. Find the user
-  const user = await this.userRepo.findById(userId);
-  if (!user) throw new NotFoundError("User not found");
+    userId: string,
+    documentId: string,
+    title: Record<string, string>,
+    uid: string
+  ): Promise<IUser | null> {
+    // 1. Find the user
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundError("User not found");
 
-  // 2. Authorization check
-  if (!user.uid || user.uid !== uid) {
-    throw new AuthorizationError("Unauthorized: User ID does not match");
-  }
-
-  // 3. Find the document to update
-  const document = user.documents?.find(doc => doc._id?.toString() === documentId);
-  if (!document) throw new NotFoundError("Document not found");
-
-  const subscribedLangs = user.languageSubscriptionList || ["en"];
-  user.documents = user.documents || [];
-
-  console.log("Current document title before update:", document.title);
-  console.log("New title to update:", title);
-  console.log("User's subscribed languages:", subscribedLangs);
-
-  // 4. Convert document.title Map to plain object if needed
-  let titleObj: ILocalizedField = {};
-  if (document.title instanceof Map) {
-    titleObj = Object.fromEntries(document.title.entries());
-  } else {
-    titleObj = { ...document.title }; // already an object
-  }
-
-  // 5. Update or add new languages
-  for (const lang of Object.keys(title)) {
-    if (!subscribedLangs.includes(lang)) {
-      throw new BadRequestError(`Language ${lang} not subscribed`);
+    // 2. Authorization check
+    if (!user.uid || user.uid !== uid) {
+      throw new AuthorizationError("Unauthorized: User ID does not match");
     }
 
-    const currentTitle = titleObj[lang];
-    console.log(`Current document title for ${lang}:`, currentTitle);
+    // 3. Find the document to update
+    const document = user.documents?.find(
+      (doc) => doc._id?.toString() === documentId
+    );
+    if (!document) throw new NotFoundError("Document not found");
 
-    // Update/add language
-    titleObj[lang] = title[lang];
-    console.log(`Updated/added language ${lang}:`, titleObj[lang]);
+    const subscribedLangs = user.languageSubscriptionList || ["en"];
+    user.documents = user.documents || [];
+
+    console.log("Current document title before update:", document.title);
+    console.log("New title to update:", title);
+    console.log("User's subscribed languages:", subscribedLangs);
+
+    // 4. Convert document.title Map to plain object if needed
+    let titleObj: ILocalizedField = {};
+    if (document.title instanceof Map) {
+      titleObj = Object.fromEntries(document.title.entries());
+    } else {
+      titleObj = { ...document.title }; // already an object
+    }
+
+    // 5. Update or add new languages
+    for (const lang of Object.keys(title)) {
+      if (!subscribedLangs.includes(lang)) {
+        throw new BadRequestError(`Language ${lang} not subscribed`);
+      }
+
+      const currentTitle = titleObj[lang];
+      console.log(`Current document title for ${lang}:`, currentTitle);
+
+      // Update/add language
+      titleObj[lang] = title[lang];
+      console.log(`Updated/added language ${lang}:`, titleObj[lang]);
+    }
+
+    // 6. Assign the updated plain object back to document.title
+    document.title = titleObj;
+
+    console.log("Updated document title object:", document.title);
+
+    // 7. Update updatedAt and save
+    user.updatedAt = new Date();
+    await this.userRepo.update(userId, user);
+
+    return user;
   }
-
-  // 6. Assign the updated plain object back to document.title
-  document.title = titleObj;
-
-  console.log("Updated document title object:", document.title);
-
-  // 7. Update updatedAt and save
-  user.updatedAt = new Date();
-  await this.userRepo.update(userId, user);
-
-  return user;
-}
-
-
 
   // public async updateDocumentTitle(userId: string, documentId: string, title: Record<string, string>, uid: string): Promise<IUser | null> {
   //   const user = await this.userRepo.findById(userId);
@@ -699,5 +815,4 @@ export default class UserService {
 
   //   return user;
   // }
-
 }

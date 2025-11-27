@@ -11,11 +11,21 @@ class AccessService {
   private userTemplateRepo = new UserTemplateRepository();
   private templateRepo = new TemplateRepository();
 
-  async signUp( uid : string, email: string) {
+  async signUp(uid: string, email: string) {
     // check existance
     const existingUser = await this.repo.findUserByEmailOrUid(email, uid);
 
     if (existingUser) {
+      if (existingUser.isDeleted && existingUser.email === email) {
+        existingUser.isDeleted = false;
+        existingUser.updatedAt = new Date();
+        existingUser.uid = uid;
+        const reactivatedUser = await this.repo.update(
+          existingUser._id.toString(),
+          existingUser
+        );
+        return reactivatedUser;
+      }
       throw new Error("User with this email or UID already exists");
     }
 
@@ -23,7 +33,9 @@ class AccessService {
     console.log("Creating new user with UID:", uid);
 
     const subscriptionCode = "FREE";
-    let subscription = await SubscriptionRepository.findBySubscriptionCode(subscriptionCode);
+    let subscription = await SubscriptionRepository.findBySubscriptionCode(
+      subscriptionCode
+    );
     let subscriptionId = "";
 
     if (!subscription) {
@@ -32,23 +44,36 @@ class AccessService {
       subscriptionId = subscription._id;
     }
 
-    const userToCreate: UserDto = { uid: uid, email: email, isDeleted: false, createdAt: new Date(), updatedAt: new Date(), subscriptionId: subscriptionId, languageSubscriptionList: ["en"] };
+    const userToCreate: UserDto = {
+      uid: uid,
+      email: email,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      subscriptionId: subscriptionId,
+      languageSubscriptionList: ["en"],
+    };
     const createdUser = await UserRepository.create(userToCreate);
 
     if (!createdUser) {
       throw new Error("Failed to create user");
     }
 
-    const defaultTemplate = await this.templateRepo.findByTemplateCode("DEFAULT");
+    const defaultTemplate = await this.templateRepo.findByTemplateCode(
+      "DEFAULT"
+    );
 
     if (defaultTemplate) {
-      const result = await this.userTemplateRepo.assignTemplateToUser(createdUser._id.toString(), defaultTemplate._id.toString())
+      const result = await this.userTemplateRepo.assignTemplateToUser(
+        createdUser._id.toString(),
+        defaultTemplate._id.toString()
+      );
       console.log("Assigned default template to new user:", result);
     }
 
     const payload = {
       email: createdUser.email,
-    }
+    };
     // await sendWelcomeEmail(email, payload);
 
     return createdUser;
@@ -60,7 +85,7 @@ class AccessService {
     }
 
     const user = await this.repo.findById(userId);
-    
+
     if (!user) {
       throw new Error("User not found");
     }
