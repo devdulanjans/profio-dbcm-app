@@ -31,7 +31,15 @@ export default class SubscriptionPlanService {
     return this.subscriptionRepo.findByCode(code);
   }
 
-  public async assignSubscriptionToUser(uid: string, userId: string, subscriptionId: string, paymentSubscriptionType: string, amount: number, currencyCode: string, paymentId: string) {
+  public async assignSubscriptionToUser(
+    uid: string,
+    userId: string,
+    subscriptionId: string,
+    paymentSubscriptionType: string,
+    amount: number,
+    currencyCode: string,
+    paymentId: string
+  ) {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
@@ -42,7 +50,10 @@ export default class SubscriptionPlanService {
       throw new Error("UID does not match the user record");
     }
 
-    if (paymentSubscriptionType !== "MONTHLY" && paymentSubscriptionType !== "YEARLY") {
+    if (
+      paymentSubscriptionType !== "MONTHLY" &&
+      paymentSubscriptionType !== "YEARLY"
+    ) {
       throw new Error("Invalid payment subscription type");
     }
 
@@ -58,7 +69,6 @@ export default class SubscriptionPlanService {
     //   throw new Error(`Payment not successful. Current status: ${paymentIntent.status}`);
     // }
 
-    
     // if (paymentIntent.amount !== amount || paymentIntent.currency !== currencyCode.toLowerCase()) {
     //   throw new Error("Payment details mismatch with Stripe");
     // }
@@ -83,7 +93,15 @@ export default class SubscriptionPlanService {
       throw new Error("Failed to update user with subscription");
     }
 
-    const paymentRecord: PaymentCreateDto = {userId, amount, currencyCode, paymentId};
+    const paymentRecord: PaymentCreateDto = {
+      userId,
+      amount,
+      currencyCode,
+      paymentId,
+      status: "COMPLETED",
+      paymentDate,
+      createdAt: new Date(),
+    };
     const createdPayment = await this.paymentRepository.create(paymentRecord);
 
     if (!createdPayment) {
@@ -92,5 +110,4 @@ export default class SubscriptionPlanService {
 
     return updatedUser;
   }
-
 }
