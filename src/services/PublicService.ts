@@ -10,19 +10,27 @@ export class PublicService {
   private userTemplateRepo = new UserTemplateRepository();
   private userRepo = new UserRepository();
 
-  async viewSharedTemplate(shareUrlName: string, templateCode: string, language: string = "en"): Promise<string> {
-
+  async viewSharedTemplate(
+    shareUrlName: string,
+    templateCode: string,
+    language: string = "en"
+  ): Promise<string> {
     const template = await this.templateRepo.findByTemplateCode(templateCode);
     if (!template) throw new NotFoundError("Template not found");
 
     const user = await this.userRepo.findByShareUrlName(shareUrlName);
     if (!user) throw new NotFoundError("User not found");
 
-    const userTemplate = await this.userTemplateRepo.findByUserIdAndTemplateId(user._id.toString(), template._id.toString());
+    const userTemplate = await this.userTemplateRepo.findByUserIdAndTemplateId(
+      user._id.toString(),
+      template._id.toString()
+    );
     if (!userTemplate) throw new NotFoundError("Template not assigned to user");
 
     userTemplate.view_count = (userTemplate.view_count ?? 0) + 1;
-    await UserTemplateModel.findByIdAndUpdate(userTemplate._id, userTemplate, { new: true });
+    await UserTemplateModel.findByIdAndUpdate(userTemplate._id, userTemplate, {
+      new: true,
+    });
 
     // Start with template HTML
     let html = template.html_content ?? "";
@@ -40,26 +48,45 @@ export class PublicService {
           if (userField instanceof Map) {
             console.log("userField is a Map:", userField);
             value = userField.get(language) ?? ""; // Map type
-          } else if (typeof userField === "object" && !Array.isArray(userField)) {
+          } else if (
+            typeof userField === "object" &&
+            !Array.isArray(userField)
+          ) {
             console.log("userField is a plain object:", userField);
             value = userField[language] ?? ""; // plain object
           } else {
-            const baseUrl = "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/"+user._id.toString()+"/PROFILE";
+            const baseUrl =
+              "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/" +
+              user._id.toString() +
+              "/PROFILE";
             // if field is profileImageURL need to add base URL
             if (key === "profileImageURL" && typeof userField === "string") {
               value = `${baseUrl}/${userField}`;
-            }else{
+            } else {
               value = userField; // Simple string field
             }
           }
         }
 
-        console.log(`Replacing placeholder ${placeholder} with value: ${value}`);
+        console.log(
+          `Replacing placeholder ${placeholder} with value: ${value}`
+        );
         html = html.split(placeholder).join(value);
       }
     }
 
     console.log("Filled HTML:", html);
     return html;
+  }
+
+  async deactivateUserByEmail(email: string): Promise<void> {
+    const user = await this.userRepo.findUserByEmail(email);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    user.isDeleted = true;
+    user.updatedAt = new Date();
+    await this.userRepo.update(user._id.toString(), user);
   }
 }

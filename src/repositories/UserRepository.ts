@@ -62,4 +62,8 @@ export default class UserRepository {
   public async delete(id: string) {
     return User.findByIdAndDelete(id);
   }
+
+  public async findUserByEmail(email: string) {
+    return User.findOne({ email });
+  }
 }

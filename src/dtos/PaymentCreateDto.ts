@@ -3,4 +3,7 @@ export interface PaymentCreateDto {
   amount: number;
   currencyCode: string;
   paymentId: string;
+  status: string;
+  paymentDate: Date;
+  createdAt: Date;
 }

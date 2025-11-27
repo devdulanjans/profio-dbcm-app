@@ -8,14 +8,21 @@ class PaymentService {
   private userRepo = new UserRepository();
   // private stripe: Stripe;
 
-   constructor() {
+  constructor() {
     // this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     //   apiVersion: "2025-09-30.clover",
     // });
   }
 
-  async createPaymentRecord(uid: string, userId: string, amount: number, currencyCode: string, paymentId: string) {
-
+  async createPaymentRecord(
+    uid: string,
+    userId: string,
+    amount: number,
+    currencyCode: string,
+    paymentId: string,
+    status: string,
+    paymentDate: Date
+  ) {
     const user = await this.userRepo.findById(userId);
 
     if (!user) {
@@ -32,12 +39,19 @@ class PaymentService {
     //   throw new Error(`Payment not successful. Current status: ${paymentIntent.status}`);
     // }
 
-    
     // if (paymentIntent.amount !== amount || paymentIntent.currency !== currencyCode.toLowerCase()) {
     //   throw new Error("Payment details mismatch with Stripe");
     // }
 
-    const paymentRecord: PaymentCreateDto = {userId, amount, currencyCode, paymentId};
+    const paymentRecord: PaymentCreateDto = {
+      userId,
+      amount,
+      currencyCode,
+      paymentId,
+      status,
+      paymentDate,
+      createdAt: new Date(),
+    };
     const createdPayment = await this.repo.create(paymentRecord);
 
     let nextPaymentDate = null;
@@ -51,7 +65,11 @@ class PaymentService {
     }
 
     if (nextPaymentDate) {
-      await this.userRepo.updatePaymentSubscriptionDetails(userId, createdPayment.paymentDate, nextPaymentDate);
+      await this.userRepo.updatePaymentSubscriptionDetails(
+        userId,
+        createdPayment.paymentDate,
+        nextPaymentDate
+      );
     } else {
       return null;
     }
