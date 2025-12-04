@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Privacy Policy — Digital Visiting Card App</title>
+  <meta name="description" content="Privacy Policy for Digital Visiting Card mobile application." />
+  <style>
+    :root{
+      --bg:#f7fafc;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#0f172a;
+      --primary:#0b5fff;
+      --success:#10b981;
+      --danger:#ef4444;
+      --glass: rgba(255,255,255,0.6);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: light;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,var(--bg),#eef2ff);
+      color:var(--accent);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.6;
+      padding:32px;
+    }
+
+    .container{
+      max-width:900px;
+      margin:0 auto;
+      background:var(--card);
+      border-radius:14px;
+      box-shadow:0 8px 30px rgba(15,23,42,0.08);
+      padding:28px;
+      border:1px solid rgba(15,23,42,0.04);
+    }
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#0c8710);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;
+      box-shadow:0 6px 18px rgba(27, 156, 4, 0.564);
+    }
+    h1{font-size:22px;margin:0}
+    .meta{color:var(--muted);font-size:13px}
+
+    nav{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+    .toc{display:flex;flex-wrap:wrap;gap:8px}
+    .toc a{padding:8px 12px;border-radius:8px;background:var(--glass);text-decoration:none;color:var(--primary);font-weight:600;font-size:13px}
+
+    main{margin-top:20px}
+    section{padding:18px 0;border-top:1px dashed rgba(15,23,42,0.04)}
+    section:first-of-type{border-top:none;padding-top:12px}
+    h2{font-size:16px;margin:0 0 8px}
+    p{margin:0 0 12px}
+    ul{margin:0 0 12px 20px}
+    code{background:#f3f4f6;padding:2px 6px;border-radius:6px;font-family:monospace;font-size:13px}
+
+    .actions{display:flex;gap:8px}
+    button{cursor:pointer;border:0;padding:10px 14px;border-radius:10px;font-weight:600}
+    .btn-primary{background:var(--primary);color:white}
+    .btn-outline{background:transparent;border:1px solid rgba(11,95,255,0.12);color:var(--primary)}
+
+    footer{margin-top:20px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;align-items:center}
+
+    /* responsive */
+    @media (max-width:640px){
+      body{padding:16px}
+      .container{padding:18px}
+      .logo{width:44px;height:44px;font-size:16px}
+    }
+
+    /* print */
+    @media print{
+      body{background:white}
+      .container{box-shadow:none;border:none}
+      nav, .actions {display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div class="brand">
+        <div class="logo">Profio</div>
+        <div>
+          <h1>Privacy Policy</h1>
+          <div class="meta">Digital Visiting Card — <span id="lastUpdated">Last Updated: [Date]</span></div>
+        </div>
+      </div>
+      <!-- <div class="actions">
+        <button class="btn-primary" id="downloadBtn">Download HTML</button>
+        <button class="btn-outline" id="copyBtn">Copy to Clipboard</button>
+      </div> -->
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+      <a href="#info">Information We Collect</a>
+      <a href="#use">How We Use Your Information</a>
+      <a href="#share">Visiting Card Sharing</a>
+      <a href="#storage">Data Storage & Security</a>
+      <a href="#deletion">Account Deletion</a>
+      <a href="#auth">Third-Party Auth</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <main>
+      <section id="intro">
+        <p>This Privacy Policy explains how we collect, use, store, and protect your information when you use our Digital Visiting Card mobile application "Profio". By creating an account or using the App, you agree to the practices described below.</p>
+      </section>
+
+      <section id="info">
+        <h2>1. Information We Collect</h2>
+        <p>We collect the following categories of information when you use the App:</p>
+        <h3>1.1 Personal Information</h3>
+        <ul>
+          <li>Full name</li>
+          <li>Email address</li>
+          <li>Contact number</li>
+          <li>Profile photo (optional)</li>
+          <li>Visiting card details (company, job title, social links, address, etc.)</li>
+        </ul>
+        <h3>1.2 Usage & Device Information</h3>
+        <ul>
+          <li>Usage analytics (how you interact with the App)</li>
+          <li>Device information (model, OS version)</li>
+          <li>IP address and device identifiers</li>
+        </ul>
+      </section>
+
+      <section id="use">
+        <h2>2. How We Use Your Information</h2>
+        <p>We use your information to:</p>
+        <ul>
+          <li>Create and manage your account</li>
+          <li>Generate and display your digital visiting card</li>
+          <li>Enable card-sharing features (QR codes, links)</li>
+          <li>Provide customer support and maintain security</li>
+          <li>Improve App performance and features</li>
+        </ul>
+      </section>
+
+      <section id="share">
+        <h2>3. Visiting Card Sharing</h2>
+        <p>Your digital visiting card is designed to be shareable. When you share your card (via QR code, public link, email, or other methods), the information you place on the card becomes visible to the recipient. You control which fields are displayed on your card.</p>
+      </section>
+
+      <section id="storage">
+        <h2>4. Data Storage and Security</h2>
+        <p>All user data is stored in our secure database. We use industry-standard security measures to protect your data from unauthorized access, disclosure, or loss. Access to production data is limited to authorized personnel only.</p>
+        <p>We do not sell your personal data to third parties. We may share minimal personal data with trusted service providers only as necessary to operate the App (for example, analytics, hosting, or email delivery services).</p>
+      </section>
+
+      <section id="deletion">
+        <h2>5. Account Deletion</h2>
+        <p>Users may request deletion of their account at any time from within the App or by contacting our support team.</p>
+        <h3>5.1 What We Delete</h3>
+        <p>Upon account deletion, we will permanently delete all user-created and account-specific data, including but not limited to:</p>
+        <ul>
+          <li>Profile information (except as noted below)</li>
+          <li>Visiting card details</li>
+          <li>Uploaded media files</li>
+          <li>Activity logs and analytics related to your account</li>
+        </ul>
+        <h3>5.2 What We Retain</h3>
+        <p>To comply with legal, administrative, and security requirements, we will retain the following limited fields even after deletion:</p>
+        <ul>
+          <li>Full Name</li>
+          <li>Email Address</li>
+          <li>Contact Number</li>
+        </ul>
+        <p>These retained fields are kept solely for record-keeping, fraud prevention, and to comply with applicable laws. They will not be used for marketing or shared with third parties for promotional purposes.</p>
+      </section>
+
+      <section id="auth">
+        <h2>6. Authentication (In-house & Google)</h2>
+        <p>You may create an account using our in-house authentication system or sign in with Google Authentication.</p>
+        <p>When you use Google sign-in, we only receive the data that you authorize via Google (typically your name, email address, and profile photo). We store only the information required to create and maintain your account.</p>
+      </section>
+
+      <section id="children">
+        <h2>7. Children’s Privacy</h2>
+        <p>The App is not intended for children under the age of 13. We do not knowingly collect information from children under 13. If you believe your child has provided us with personal information, please contact us to request deletion.</p>
+      </section>
+
+      <section id="changes">
+        <h2>8. Changes to This Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time. When we make changes, we will post the updated policy in the App and update the "Last Updated" date at the top of this page. Continued use of the App after changes indicates acceptance of the updated policy.</p>
+      </section>
+
+      <section id="contact">
+        <h2>9. Contact Us</h2>
+        <p>If you have any questions about this policy or wish to request account deletion, please contact us:</p>
+        <p><strong>Email:</strong> <a href="mailto:support@profio.app">support@profio.app</a></p>
+        <p><strong>Company:</strong> Mochiron Co Ltd</p>
+        <p><strong>Address:</strong> 〒874-0909 3-7 Tanoyu-cho, Beppu City, Oita Prefecture Alliance Tower Z 4th floor. </p>
+      </section>
+
+    </main>
+
+    <footer>
+      <div>© <span id="year"></span>Mochiron Co Ltd. All rights reserved.</div>
+      <div class="meta">Made with care — Profio</div>
+    </footer>
+  </div>
+
+  <script>
+    // Populate date and year
+    (function(){
+      const lastUpdated = document.getElementById('lastUpdated');
+      const yearEl = document.getElementById('year');
+      const now = new Date();
+      const formatted = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+      lastUpdated.textContent = 'Last Updated: ' + formatted;
+      yearEl.textContent = now.getFullYear();
+    })();
+
+    // Copy to clipboard
+    document.getElementById('copyBtn').addEventListener('click', async function(){
+      try{
+        await navigator.clipboard.writeText(document.documentElement.outerHTML);
+        alert('HTML copied to clipboard — paste into a file and save as .html');
+      }catch(e){
+        alert('Copy failed. You can also right-click → Save As on this page.');
+      }
+    });
+
+    // Download HTML
+    document.getElementById('downloadBtn').addEventListener('click', function(){
+      const blob = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'privacy-policy-digital-visiting-card.html';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

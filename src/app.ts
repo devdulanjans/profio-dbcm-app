@@ -18,6 +18,7 @@ import { checkFirebaseJwt } from "./middleware/firebaseMiddleware";
 
 const app = express();
 app.use(express.json());
+app.use(express.static('public'));
 
 // Public route
 app.get("/health", (req, res) => {
@@ -103,7 +104,7 @@ app.use("/api/subscriptions", checkFirebaseJwt, subscriptionPlanRoutes);
 app.use("/api/templates", checkFirebaseJwt, templateRoutes);
 app.use("/api/user-templates", checkFirebaseJwt, userTemplateRoutes);
 app.use("/api/contacts", checkFirebaseJwt, contactRoutes);
-app.use("/api/public", publicRoutes);
+app.use("", publicRoutes);
 app.use("/api/app-global-config", checkFirebaseJwt, appGlobalConfigRoutes);
 app.use("/api/access", checkFirebaseJwt, accessRoutes);
 app.use("/api/payments", checkFirebaseJwt, paymentRoutes);
