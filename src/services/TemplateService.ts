@@ -105,7 +105,12 @@ export default class TemplateService {
                 "/PROFILE";
 
               if (key === "profileImageURL" && typeof userField === "string") {
-                value = `${baseUrl}/${userField}`;
+                if (!userField || userField.trim() === "") {
+                  value =
+                    "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/Common/default-profile.jpg";
+                } else {
+                  value = `${baseUrl}/${userField}`;
+                }
               } else {
                 value = userField;
               }
