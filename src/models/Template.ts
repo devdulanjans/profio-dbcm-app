@@ -6,6 +6,7 @@ export interface ITemplate extends Document {
     name: string; // Template name (max 150 chars)
     description: string; // Short description
     html_content?: string; // HTML content of the template
+    public_html_content?: string; // Public HTML content of the template
     preview_image: string; // URL to preview image
     placeholders: Map<string, string>; // JSON structure of placeholders
     is_active: boolean; // Availability status
@@ -18,6 +19,7 @@ const templateSchema = new Schema<ITemplate>({
     template_code: { type: String, required: true, unique: true },
     description: { type: String, required: true },
     html_content: { type: String, required: false },
+    public_html_content: { type: String, required: false },
     preview_image: { type: String, required: true },
     placeholders: { type: Map, of: String, required: true },
     is_active: { type: Boolean, default: true },

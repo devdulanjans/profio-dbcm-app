@@ -33,6 +33,34 @@ export class PublicController {
     }
   }
 
+  async viewTemplateNew(req: Request, res: Response) {
+    try {
+      console.log("viewTemplateNew called with params:", req.params);
+      const { shareUrlName, templateCode } = req.params;
+
+      if (!shareUrlName || !templateCode) {
+        return res
+          .status(400)
+          .send("Share URL name and template code are required.");
+      }
+
+      const filledHtml = await service.viewSharedTemplateNew(
+        shareUrlName,
+        templateCode
+      );
+
+      if (!filledHtml) {
+        return res.status(404).send("Template not found.");
+      }
+
+      console.log(`Filled HTML for ${shareUrlName}:`, filledHtml);
+
+      res.send(filledHtml); // send HTML to render directly
+    } catch (err: any) {
+      res.status(404).send(err.message);
+    }
+  }
+
   async deactivateUser(req: Request, res: Response) {
     try {
       const { email } = req.body;

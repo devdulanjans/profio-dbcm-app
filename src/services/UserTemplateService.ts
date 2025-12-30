@@ -139,7 +139,7 @@ export default class UserTemplateService {
     console.log(`template code: ${template.template_code}`);
     console.log(`template: ${template}`);
 
-    const link = `${process.env.FRONTEND_URL}/${language}/${user.shareURLName}/${template.template_code}`;
+    const link = `${process.env.FRONTEND_URL}/${user.shareURLName}/${template.template_code}`;
 
     return link;
   }
