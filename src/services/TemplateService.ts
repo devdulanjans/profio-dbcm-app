@@ -100,14 +100,14 @@ export default class TemplateService {
               value = userField[language] ?? "";
             } else {
               const baseUrl =
-                "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/" +
+                "https://profio.app/" +
                 user._id.toString() +
                 "/PROFILE";
 
               if (key === "profileImageURL" && typeof userField === "string") {
                 if (!userField || userField.trim() === "") {
                   value =
-                    "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/Common/default-profile.jpg";
+                    "https://profio.app/Common/default-profile.jpg";
                 } else {
                   value = `${baseUrl}/${userField}`;
                 }
