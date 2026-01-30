@@ -56,7 +56,7 @@ export class PublicService {
             value = userField[language] ?? ""; // plain object
           } else {
             const baseUrl =
-              "https://profio.app/" +
+               "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/" +
               user._id.toString() +
               "/PROFILE";
             // if field is profileImageURL need to add base URL
@@ -125,7 +125,7 @@ export class PublicService {
             value = userField[language] ?? ""; // plain object
           } else {
             const baseUrl =
-              "https://profio.app/" +
+               "https://profio-dbcm-s3-dev.sgp1.digitaloceanspaces.com/" +
               user._id.toString() +
               "/PROFILE";
             // if field is profileImageURL need to add base URL
