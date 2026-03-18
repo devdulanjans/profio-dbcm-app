@@ -5,6 +5,7 @@ import UserTemplateRepository from "../repositories/UserTemplateRepository";
 import { UserDto } from "../dtos/UserDto"; // Adjust the path as needed
 import { sendWelcomeEmail } from "../utils/SendEmail"; // Adjust the path as needed
 import TemplateRepository from "../repositories/TemplateRepository";
+import * as admin from "firebase-admin";
 
 class AccessService {
   private repo = new UserRepository();
@@ -98,6 +99,15 @@ class AccessService {
       throw new Error("UID does not match the user record");
     }
 
+    // ✅ 1. Disable user in Firebase
+    try {
+      await admin.auth().updateUser(uid, { disabled: true });
+    } catch (error) {
+      console.error("Firebase disable failed:", error);
+      throw new Error("Failed to disable user in Firebase");
+    }
+
+  // ✅ 2. Mark as deleted in your DB
     user.isDeleted = true;
     user.updatedAt = new Date();
     await this.repo.update(userId, user);
