@@ -43,7 +43,7 @@ export class AccessController {
         return res.status(400).json({ status: 1, message: "Unauthorized" });
       }
 
-      const { uid, userId } = req.body;
+      const { uid, userId, isDelete } = req.body;
 
       if (!userId) {
         return res.status(400).json({ status: 1, message: "Missing userId" });
@@ -53,7 +53,7 @@ export class AccessController {
         return res.status(400).json({ status: 1, message: "Missing uid" });
       }
 
-      const result = await service.deactivateUser(userId, uid, loggedInUid);
+      const result = await service.deactivateUser(userId, uid, loggedInUid, isDelete);
       res.json({ status: 0, message: "User deactivated successfully" });
     } catch (err: any) {
       res.status(500).json({ status: 1, message: err.message });

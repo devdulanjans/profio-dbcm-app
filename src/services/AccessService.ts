@@ -80,7 +80,7 @@ class AccessService {
     return createdUser;
   }
 
-  async deactivateUser(userId: string, uid: string, loggedInUid: string) {
+  async deactivateUser(userId: string, uid: string, loggedInUid: string, isDelete: boolean) {
     if (uid !== loggedInUid) {
       throw new Error("Unauthorized: UID mismatch");
     }
@@ -99,19 +99,23 @@ class AccessService {
       throw new Error("UID does not match the user record");
     }
 
-    // ✅ 1. Disable user in Firebase
-    try {
-      await admin.auth().updateUser(uid, { disabled: true });
-    } catch (error) {
-      console.error("Firebase disable failed:", error);
-      throw new Error("Failed to disable user in Firebase");
+    if (!isDelete) {
+      // ✅ 1. Disable user in Firebase
+      try {
+        await admin.auth().updateUser(uid, { disabled: true });
+      } catch (error) {
+        console.error("Firebase disable failed:", error);
+        throw new Error("Failed to disable user in Firebase");
+      }
     }
 
-  // ✅ 2. Mark as deleted in your DB
+    // Mark as deleted in your DB
     user.isDeleted = true;
     user.updatedAt = new Date();
     await this.repo.update(userId, user);
+    
     return true;
+
   }
 }
 
