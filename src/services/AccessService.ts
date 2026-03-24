@@ -95,25 +95,34 @@ class AccessService {
       throw new Error("User is already deactivated");
     }
 
+    if (user.isActive === false) {
+      throw new Error("User is already inactive");
+    }
+
     if (user.uid !== uid) {
       throw new Error("UID does not match the user record");
     }
 
-    if (!isDelete) {
-      // ✅ 1. Disable user in Firebase
-      try {
-        await admin.auth().updateUser(uid, { disabled: true });
-      } catch (error) {
-        console.error("Firebase disable failed:", error);
-        throw new Error("Failed to disable user in Firebase");
-      }
-    }
+    // if (!isDelete) {
+    //   // ✅ 1. Disable user in Firebase
+    //   try {
+    //     await admin.auth().updateUser(uid, { disabled: true });
+    //   } catch (error) {
+    //     console.error("Firebase disable failed:", error);
+    //     throw new Error("Failed to disable user in Firebase");
+    //   }
+    // }
 
-    // Mark as deleted in your DB
-    user.isDeleted = true;
+    if (isDelete) {
+      user.isDeleted = true;
+      user.isActive = false;
+    } else {
+      user.isActive = false;
+    }
+    
     user.updatedAt = new Date();
     await this.repo.update(userId, user);
-    
+
     return true;
 
   }

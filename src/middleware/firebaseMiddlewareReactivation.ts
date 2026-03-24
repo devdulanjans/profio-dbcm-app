@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { firebaseAdmin } from "../config/FirebaseAdmin";
 import UserRepository from "../repositories/UserRepository";
 
-export async function checkFirebaseJwt(
+export async function checkFirebaseJwtForReactivation(
   req: Request,
   res: Response,
   next: NextFunction
@@ -84,9 +84,9 @@ export async function checkFirebaseJwt(
       return res.status(401).json({ status: 1, message: "User account is deactivated" });
     }
 
-    if (user && user.isActive === false) {
-      return res.status(401).json({ status: 1, message: "User account is inactive" });
-    }
+    // if (user && user.isActive === false) {
+    //   return res.status(401).json({ status: 1, message: "User account is inactive" });
+    // }
 
     // Attach user info to request for later use
     (req as any).user = decodedToken;

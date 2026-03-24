@@ -26,6 +26,7 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   isDeleted: boolean;
+  isActive?: boolean; 
   lastPaymentDate?: Date;
   nextPaymentDate?: Date;
   paymentSubscriptionType?: string; // e.g. "MONTHLY", "YEARLY", null
@@ -84,6 +85,7 @@ const userSchema = new Schema<IUser>({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   isDeleted: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true },
   lastPaymentDate: { type: Date, required: false, default: null },
   nextPaymentDate: { type: Date, required: false, default: null },
   paymentSubscriptionType: { type: String, required: false, default: null },
