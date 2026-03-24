@@ -24,7 +24,7 @@ export class ReactivationController {
       }
 
       const result = await service.reactivateUser(userId, uid, loggedInUid);
-      res.json({ status: 0, message: "User deactivated successfully" });
+      res.json({ status: 0, message: "User reactivated successfully" });
     } catch (err: any) {
       res.status(500).json({ status: 1, message: err.message });
     }
