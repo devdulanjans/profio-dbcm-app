@@ -8,6 +8,7 @@ import publicRoutes from "./routes/publicRoutes";
 import appGlobalConfigRoutes from "./routes/appGlobalConfigRoutes";
 import accessRoutes from "./routes/accessRoutes";
 import paymentRoutes from "./routes/paymentRoutes";
+import reactivationRoutes from "./routes/reactivationRoutes";
 import { checkJwt } from "./middleware/authMiddleware";
 import { checkFirebaseJwt } from "./middleware/firebaseMiddleware";
 import { checkFirebaseJwtForReactivation } from "./middleware/firebaseMiddlewareReactivation";
@@ -108,7 +109,7 @@ app.use("/api/contacts", checkFirebaseJwt, contactRoutes);
 app.use("", publicRoutes);
 app.use("/api/app-global-config", checkFirebaseJwt, appGlobalConfigRoutes);
 app.use("/api/access", checkFirebaseJwt, accessRoutes);
-app.use("/api/reactivation", checkFirebaseJwtForReactivation, require("./routes/reactivationRoutes").default);
+app.use("/api/reactivation", checkFirebaseJwtForReactivation, reactivationRoutes);
 app.use("/api/payments", checkFirebaseJwt, paymentRoutes);
 
 // Custom error handler for JWT
