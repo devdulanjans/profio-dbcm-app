@@ -3,12 +3,12 @@ import UserRepository from "../repositories/UserRepository";
 class ReactivationService {
   private repo = new UserRepository();
 
-  async reactivateUser(userId: string, uid: string, loggedInUid: string) {
+  async reactivateUser(uid: string, loggedInUid: string) {
     if (uid !== loggedInUid) {
       throw new Error("Unauthorized: UID mismatch");
     }
 
-    const user = await this.repo.findById(userId);
+    const user = await this.repo.findUserByUid(uid);
 
     if (!user) {
       throw new Error("User not found");
@@ -22,14 +22,10 @@ class ReactivationService {
       throw new Error("User is already active");
     }
 
-    if (user.uid !== uid) {
-      throw new Error("UID does not match the user record");
-    }
-
     user.isActive = true;
     
     user.updatedAt = new Date();
-    await this.repo.update(userId, user);
+    await this.repo.update(user._id.toString(), user);
 
     return true;
 
